@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="es">
+  <body style="font-family: 'Share Tech Mono', monospace; background-color:#05080f; color:#e6f6ff;">
+    <h2 style="color:#22d3ee;">🔐 Recuperación de acceso</h2>
+    <p>Has solicitado recuperar tu contraseña en el sistema <strong>Acceso Cuántico</strong>.</p>
+    <p>Pulsa el siguiente enlace para establecer una nueva contraseña:</p>
+    <p>
+      <a href="{{ protocol }}://{{ domain }}{% url 'usuarios:password_reset_confirm' uidb64=uid token=token %}"
+         style="color:#22d3ee; text-decoration:none; font-weight:bold;">
+        👉 Restablecer contraseña
+      </a>
+    </p>
+    <p>Si no solicitaste este cambio, ignora este correo.</p>
+    <hr style="border:0; border-top:1px solid #22d3ee; margin-top:20px;">
+    <small>SchoolComms · Sistema de Control de Acceso Futurista</small>
+  </body>
+</html>

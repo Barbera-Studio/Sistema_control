@@ -1,0 +1,301 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>🧬 Acceso Cuántico — Núcleo Holográfico</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#0a0f1e">
+  <link rel="icon" type="image/png" href="{% static 'img/favicon_qr.png' %}">
+  <link href="{% static 'css/output.css' %}" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg0:#02060f; --bg1:#040a14; --bg2:#0a1020;
+      --glass: rgba(10,20,30,0.80);
+      --glass-strong: rgba(10,20,30,0.92);
+      --cyan:#22d3ee; --blue:#2563eb; --purple:#7c3aed; --pink:#ec4899; --red:#ef4444; --text:#e6f6ff;
+    }
+    html, body {
+      overflow-x: hidden;
+      margin:0; padding:0; height:100%;
+      color:var(--text);
+      background: radial-gradient(1400px 900px at 20% 20%, var(--bg2) 0%, var(--bg1) 55%, var(--bg0) 100%);
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Share Tech Mono", "Helvetica Neue", Arial, "Noto Sans";
+    }
+
+    /* Estructura de página: footer siempre abajo */
+    .viewport {
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+    }
+    main.center {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 1rem;
+    }
+
+    /* Capas fondo decorativas (no bloquean interacción) */
+    .layer { position: fixed; inset:0; pointer-events:none; }
+    .stars {
+      background: transparent url("{% static 'img/stars.png' %}") repeat;
+      opacity:.35; z-index:-3; animation: moveStars 160s linear infinite;
+    }
+    @keyframes moveStars { from{background-position:0 0} to{background-position:-8000px 3000px} }
+    .filaments::before, .filaments::after {
+      content:""; position:absolute; width:52vw; height:52vw; filter:blur(60px); opacity:.32; z-index:-2;
+    }
+    .filaments::before { top:-12vh; left:-12vw; background: radial-gradient(closest-side, rgba(34,211,238,.28), transparent 70%); animation: floatA 22s ease-in-out infinite; }
+    .filaments::after  { bottom:-14vh; right:-10vw; background: radial-gradient(closest-side, rgba(124,58,237,.26), transparent 75%); animation: floatB 26s ease-in-out infinite; }
+    @keyframes floatA { 0%,100%{transform:translate(0,0)} 50%{transform:translate(2vw,1.6vh)} }
+    @keyframes floatB { 0%,100%{transform:translate(0,0)} 50%{transform:translate(-2vw,-2vh)} }
+
+    /* Tarjeta login: centrada, con aire vertical y buen padding */
+    .card {
+      position: relative;
+      width: min(720px, 92vw);
+      margin: clamp(16px, 4vh, 32px) auto;
+      padding: clamp(20px, 4vw, 32px);
+      border-radius: 22px;
+      background: var(--glass);
+      backdrop-filter: blur(18px) saturate(1.05);
+      border: 1.5px solid rgba(34,211,238,.35);
+      box-shadow: 0 2px 22px rgba(0,0,0,.55), inset 0 0 28px rgba(34,211,238,.06);
+      animation: cardGlow 5.6s ease-in-out infinite;
+      contain: layout paint;
+    }
+    @keyframes cardGlow {
+      0%,100%{box-shadow:0 2px 22px rgba(0,0,0,.55), inset 0 0 22px rgba(34,211,238,.05)}
+      50%{box-shadow:0 6px 28px rgba(0,0,0,.65), inset 0 0 36px rgba(34,211,238,.12)}
+    }
+    .card::before{
+      content:""; position:absolute; inset:-2px; border-radius:24px; padding:2px; opacity:.55; animation:hue 18s linear infinite;
+      background: linear-gradient(120deg, rgba(34,211,238,.55), rgba(37,99,235,.45), rgba(124,58,237,.55));
+      mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      mask-composite: exclude;
+      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor;
+      pointer-events:none;
+    }
+    @keyframes hue { 0%{filter:hue-rotate(0deg)} 100%{filter:hue-rotate(360deg)} }
+
+    /* Cabecera */
+    .title {
+      display:block; font-weight:900; letter-spacing:.07em; text-transform:uppercase;
+      font-size: clamp(1.6rem, 5.5vw, 3rem);
+      background: linear-gradient(90deg, var(--cyan), var(--blue), var(--purple));
+      -webkit-background-clip:text; background-clip:text; color: transparent;
+      text-shadow: 0 0 16px rgba(34,211,238,.35);
+      animation: shimmer 3.6s ease-in-out infinite;
+      text-align:center; margin-bottom:.25rem;
+    }
+    @keyframes shimmer { 0%,100%{opacity:.97} 50%{opacity:1} }
+    .subtitle {
+      text-align:center; font-size: clamp(.8rem, 2.5vw, 1rem);
+      color: rgba(226,245,255,.85); letter-spacing: .18em; text-transform: uppercase;
+    }
+
+    /* Grid interior compacta para móvil */
+    .grid { display:grid; grid-template-columns: 1fr; gap: clamp(16px, 2.5vw, 24px); }
+    @media (min-width: 860px){
+      .grid { grid-template-columns: 1.05fr .95fr; align-items: center; }
+    }
+
+    /* Orb branding: compacto y sin bloquear interacción */
+    .orb {
+      position: relative;
+      height: clamp(140px, 22vw, 220px);
+      display:grid; place-items:center;
+      z-index: 0; pointer-events: none;
+    }
+    .orb .core {
+      width: clamp(100px, 16vw, 140px); height: clamp(100px, 16vw, 140px);
+      border-radius: 50%;
+      background: radial-gradient(closest-side, rgba(34,211,238,.28), rgba(124,58,237,.32));
+      box-shadow: 0 0 40px rgba(124,58,237,.45), 0 0 24px rgba(34,211,238,.35) inset;
+      animation: pulseCore 6s ease-in-out infinite;
+    }
+    @keyframes pulseCore { 0%,100%{transform:scale(1)} 50%{transform:scale(1.06)} }
+    .orb .ring { position:absolute; inset:0; border-radius:50%; border: 2px dashed rgba(34,211,238,.45); animation: spin 18s linear infinite; }
+    @keyframes spin { from{transform:rotate(0)} to{transform:rotate(360deg)} }
+
+    /* Envoltorio del formulario por encima del orb */
+    .form-wrap { position: relative; z-index: 2; }
+
+    /* Formulario: campos activados, centrados y con tipografía >=16px */
+    .form { display:flex; flex-direction:column; gap: clamp(12px, 2.2vw, 16px); }
+    .field { display:flex; justify-content:center; width:100%; }
+    .field-inner {
+      flex: 1; width: 100%; max-width: 560px;
+      display: flex; align-items: center; gap: 0.75rem;
+      background: var(--glass-strong);
+      border: 1px solid rgba(34,211,238,.35);
+      border-radius: 14px;
+      padding: 0.9rem 1rem;
+      box-shadow: inset 0 0 12px rgba(0,0,0,.4);
+    }
+    .field-inner:focus-within {
+      border-color: var(--cyan);
+      box-shadow: 0 0 0 3px rgba(34,211,238,.2), 0 0 18px rgba(34,211,238,.3);
+    }
+    .sr-only {
+      position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); border:0;
+    }
+    .icon {
+      flex: 0 0 28px; display:flex; align-items:center; justify-content:center;
+      font-size: 1.2rem; color: var(--cyan);
+      filter: drop-shadow(0 0 4px rgba(34,211,238,.5));
+    }
+    .input {
+      flex: 1; min-width: 0;
+      border: none; background: transparent; color: var(--text);
+      font-size: clamp(1rem, 4vw, 1.1rem);
+      text-align: center;
+      padding: 0.5rem 0.3rem;
+    }
+    .input::placeholder { color: rgba(170,235,255,.6); text-align: center; }
+    .input:focus { outline: none; }
+
+    /* Acciones y botón funcional */
+    .actions { display:flex; flex-direction:column; gap: clamp(12px, 2.2vw, 16px); align-items:center; }
+    .btn {
+      width: 100%; max-width: 560px;
+      padding: 1rem 1rem; border:0; border-radius:14px;
+      font-weight:800; letter-spacing:.06em; color:#fff; cursor:pointer;
+      background: linear-gradient(90deg, var(--cyan), var(--blue), var(--purple), var(--pink));
+      background-size: 220% 220%;
+      box-shadow: 0 10px 22px rgba(37,99,235,.25), 0 0 22px rgba(34,211,238,.35);
+      animation: bgMove 6.5s linear infinite;
+      transition: transform .18s ease, box-shadow .18s ease, opacity .18s ease;
+      font-size: clamp(1rem, 2.8vw, 1.05rem);
+    }
+    .btn:hover { transform: translateY(-1px) scale(1.01); box-shadow: 0 12px 26px rgba(37,99,235,.35), 0 0 28px rgba(34,211,238,.45); }
+    .btn:active { transform: translateY(0) scale(.995); }
+    .btn[disabled]{ opacity:.65; cursor:not-allowed; }
+
+    .recovery { text-align:center; font-size: clamp(.85rem, 2.4vw, .95rem); color:#cfeaff; }
+    .recovery a { position:relative; color: var(--cyan); font-weight:700; text-decoration:none; }
+    .recovery a::after{
+      content:""; position:absolute; left:0; bottom:-3px; height:2px; width:0;
+      background: var(--cyan); box-shadow: 0 0 12px rgba(34,211,238,.55); transition: width .28s ease;
+    }
+    .recovery a:hover::after{ width:100%; }
+
+    .note { text-align:center; font-size: clamp(.75rem, 2.2vw, .9rem); color: #b7d7e9; opacity:.8; }
+
+    /* Footer */
+    footer {
+      width: 100%;
+      text-align:center; color:#9ca3af;
+      border-top:1px solid #1f2937;
+      padding: 1rem 1rem 1.2rem;
+      font-size: clamp(.75rem, 2.2vw, .9rem);
+    }
+    footer .small { font-size: clamp(.68rem, 2vw, .8rem); color:#6b7280; }
+
+    /* Animaciones globales */
+    @keyframes bgMove { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
+
+    /* Reduce motion */
+    @media (prefers-reduced-motion: reduce){
+      .stars, .filaments::before, .filaments::after, .card, .title, .orb .core, .orb .ring, .btn { animation: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Capas dinámicas -->
+  <div class="layer stars" aria-hidden="true"></div>
+  <div class="layer filaments" aria-hidden="true"></div>
+
+  <div class="viewport">
+    <main class="center" role="main">
+      <section class="card" aria-labelledby="titulo-login">
+        <header>
+          <h1 id="titulo-login" class="title">🧬 Acceso Cuántico</h1>
+          <p class="subtitle">Autenticación Multiversal — Nivel Omega</p>
+        </header>
+
+        <div class="grid">
+          <!-- Branding orb (compacto y no bloquea) -->
+          <div class="orb" aria-hidden="true">
+            <div class="core"></div>
+            <div class="ring" style="border-color: rgba(124,58,237,.45)"></div>
+          </div>
+
+          <!-- Formulario por encima del orb -->
+          <div class="form-wrap">
+            {% if error %}
+              <div class="note" style="color: var(--red); font-weight:800;" role="alert">{{ error }}</div>
+            {% endif %}
+
+            <form method="POST" action="{% url 'usuarios:login' %}" class="form" novalidate>
+              {% csrf_token %}
+
+              <div class="field">
+                <div class="field-inner">
+                  <span class="icon" aria-hidden="true">👤</span>
+                  <label for="username" class="sr-only">Usuario</label>
+                  <input id="username" name="username" type="text" autocomplete="username" required
+                         placeholder="Identificador oficial" class="input">
+                </div>
+              </div>
+
+              <div class="field">
+                <div class="field-inner">
+                  <span class="icon" aria-hidden="true">🔒</span>
+                  <label for="password" class="sr-only">Contraseña</label>
+                  <input id="password" name="password" type="password" autocomplete="current-password" required
+                         placeholder="Clave de acceso" class="input">
+                </div>
+              </div>
+
+              <div class="actions">
+                <button type="submit" class="btn" id="btnLogin">Iniciar sesión</button>
+                <p class="recovery">
+                  ¿Olvidaste tu acceso?
+                  <a href="{% url 'usuarios:password_reset' %}">Recuperar credenciales</a>
+                </p>
+                <p class="note">Este sitio está vinculado a núcleos holográficos.</p>
+              </div>
+            </form>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <p>🔒 Sistema de Control de Acceso — Versión Futurista</p>
+      <p class="mt-1">Desarrollado por <span style="color:#22d3ee">Barberá Digital Studio</span> · {{ now|date:"d M Y" }}</p>
+      <p class="mt-1 small">Todos los accesos quedan registrados en la red cuántica</p>
+    </footer>
+  </div>
+
+  <script>
+    // Botón operativo: evita doble envío y da feedback
+    (function(){
+      const form = document.querySelector('form');
+      const btn = document.getElementById('btnLogin');
+      if (!form || !btn) return;
+
+      btn.removeAttribute('disabled'); // activo por defecto
+
+      form.addEventListener('submit', () => {
+        btn.setAttribute('disabled', 'true');
+        btn.textContent = 'Conectando…';
+        // Restaurar si no hubo redirección (error servidor)
+        setTimeout(() => {
+          if (btn.hasAttribute('disabled')) {
+            btn.removeAttribute('disabled');
+            btn.textContent = 'Iniciar sesión';
+          }
+        }, 7000);
+      });
+    })();
+  </script>
+</body>
+</html>

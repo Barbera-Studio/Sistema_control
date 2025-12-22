@@ -1,0 +1,26 @@
+<ul class="space-y-4">
+  {% for evento in eventos %}
+    <li class="bg-gray-900/70 border border-cyan-600 rounded-xl p-4 shadow-md">
+      <div class="flex justify-between items-center">
+        <span class="text-cyan-400 font-bold">
+          {% if evento.usuario %}
+            {{ evento.usuario.username }}
+          {% else %}
+            Usuario desconocido
+          {% endif %}
+        </span>
+        <span class="text-sm text-gray-400">{{ evento.fecha|date:"d M H:i:s" }}</span>
+      </div>
+      <div class="mt-1 text-sm text-gray-300">
+        Resultado: 
+        {% if evento.resultado == 'permitido' %}
+          <span class="text-green-400 font-bold">✅ Permitido</span>
+        {% elif evento.resultado == 'denegado' %}
+          <span class="text-red-400 font-bold">🚫 Denegado</span>
+        {% elif evento.resultado == 'fuera de horario' %}
+          <span class="text-orange-400 font-bold">⏰ Fuera de horario</span>
+        {% endif %}
+      </div>
+    </li>
+  {% endfor %}
+</ul>

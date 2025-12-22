@@ -1,0 +1,199 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Editor de Avatar</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" href="{% static 'img/favicon_qr.png' %}">
+  <link href="{% static 'css/output.css' %}" rel="stylesheet">
+
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: 'Share Tech Mono', monospace;
+      background: radial-gradient(ellipse at center, #05080f 0%, #000 100%);
+      overflow: hidden;
+      color: #fff;
+    }
+
+    .stars {
+      position: absolute;
+      width: 100%; height: 100%;
+      background: transparent url('{% static "img/stars.png" %}') repeat;
+      animation: moveStars 200s linear infinite;
+      z-index: -3;
+    }
+
+    @keyframes moveStars {
+      from { background-position: 0 0; }
+      to { background-position: -10000px 5000px; }
+    }
+
+    .particles span {
+      position: absolute;
+      display: block;
+      width: 3px; height: 3px;
+      background: cyan;
+      border-radius: 50%;
+      opacity: 0.7;
+      animation: float 12s linear infinite;
+    }
+
+    @keyframes float {
+      0% { transform: translateY(0) scale(1); opacity: 0.7; }
+      50% { transform: translateY(-300px) scale(1.4); opacity: 1; }
+      100% { transform: translateY(0) scale(1); opacity: 0.7; }
+    }
+
+    .container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      padding: 2rem;
+      position: relative;
+      z-index: 10;
+    }
+
+    .editor-box {
+      background: rgba(10,20,30,0.85);
+      backdrop-filter: blur(20px);
+      border: 2px solid cyan;
+      border-radius: 20px;
+      padding: 3rem 2.5rem;
+      box-shadow: 0 0 40px cyan, inset 0 0 20px rgba(0,255,255,0.2);
+      max-width: 460px;
+      width: 100%;
+      text-align: center;
+      animation: pulseSoft 4s infinite;
+    }
+
+    @keyframes pulseSoft {
+      0%, 100% { box-shadow: 0 0 30px #00f0ff33; }
+      50% { box-shadow: 0 0 60px #00f0ffaa; }
+    }
+
+    .glitch {
+      color: #00e5ff;
+      font-size: 2.5rem;
+      font-weight: bold;
+      text-transform: uppercase;
+      text-shadow: 0 0 10px cyan, 0 0 20px blue;
+      animation: glitch 3s infinite;
+      margin-bottom: 1rem;
+    }
+
+    @keyframes glitch {
+      0% { text-shadow: 2px 2px #ff00c8, -2px -2px cyan; }
+      20% { text-shadow: -2px 2px #00fff9, 2px -2px magenta; }
+      40% { text-shadow: 2px -2px lime, -2px 2px blue; }
+      100% { text-shadow: 2px 2px #ff00c8, -2px -2px cyan; }
+    }
+
+    .orbital-input {
+      width: 100%;
+      padding: 14px;
+      margin-top: 10px;
+      border-radius: 12px;
+      border: none;
+      background: rgba(0,20,30,0.9);
+      color: cyan;
+      text-align: center;
+      font-size: 1.1rem;
+      box-shadow: 0 0 10px rgba(0,255,255,0.4);
+      transition: all 0.3s;
+    }
+
+    .orbital-input:focus {
+      outline: none;
+      background: rgba(0,40,60,0.9);
+      box-shadow: 0 0 25px cyan;
+    }
+
+    .orbital-input::file-selector-button {
+      background: linear-gradient(90deg, #00f0ff, #0077ff);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 10px;
+      margin-right: 1rem;
+      cursor: pointer;
+      box-shadow: 0 0 10px cyan;
+    }
+
+    .btn-update {
+      margin-top: 2rem;
+      width: 100%;
+      padding: 16px;
+      font-size: 1.2rem;
+      font-weight: bold;
+      border: none;
+      border-radius: 14px;
+      background: linear-gradient(90deg, #00f0ff, #0077ff, #00f0ff);
+      background-size: 300%;
+      color: #fff;
+      cursor: pointer;
+      box-shadow: 0 0 25px cyan;
+      animation: bgMove 6s linear infinite;
+    }
+
+    @keyframes bgMove {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .btn-update:hover {
+      box-shadow: 0 0 40px #00f0ff, 0 0 80px #0077ff;
+    }
+
+    .message.success {
+      color: #00ffcc;
+      font-weight: bold;
+      text-shadow: 0 0 10px #00ffcc;
+      animation: pulseSoft 2s infinite;
+    }
+
+    .message.error {
+      color: #ff4f8b;
+      font-weight: bold;
+      text-shadow: 0 0 10px #ff4f8b;
+      animation: pulseSoft 2s infinite;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="stars"></div>
+
+  <div class="particles">
+    {% for i in rango %}
+      <span style="top:{{ i|add:10 }}%; left:{{ forloop.counter0|add:3 }}%; animation-duration:{{ 6|add:i }}s;"></span>
+    {% endfor %}
+  </div>
+
+  <div class="container">
+    <div class="editor-box">
+      <h2 class="glitch">🧬 Editor de Avatar</h2>
+
+      {% if messages %}
+        {% for message in messages %}
+          <div class="message {{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+
+      <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="file" name="avatar" id="avatar" accept="image/*" class="orbital-input" required>
+
+        <button type="submit" class="btn-update">🚀 Actualizar Perfil</button>
+      </form>
+    </div>
+  </div>
+
+</body>
+</html>
+

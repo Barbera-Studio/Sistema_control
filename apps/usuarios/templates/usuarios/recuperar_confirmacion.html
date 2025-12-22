@@ -1,0 +1,344 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>🔐 Confirmar recuperación — Acceso Cuántico</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="color-scheme" content="dark" />
+  <meta name="theme-color" content="#05080f" />
+  <link rel="icon" type="image/png" href="{% static 'img/favicon_qr.png' %}">
+  <link href="{% static 'css/output.css' %}" rel="stylesheet" />
+
+  <style>
+    :root{
+      --bg0:#000000; --bg1:#05080f;
+      --glass: rgba(10,20,30,0.82);
+      --cyan:#22d3ee; --blue:#2563eb; --purple:#7c3aed; --pink:#ec4899;
+      --text:#e6f6ff;
+      --danger:#ff4f8b; --success:#00ffcc;
+      --border: rgba(34,211,238,.35);
+    }
+
+    /* Habilitar scroll vertical y evitar bloqueo por overflow hidden */
+    html {
+      height: 100%;
+    }
+    body {
+      margin: 0;
+      min-height: 100%;
+      font-family: "Share Tech Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      background: radial-gradient(1200px 800px at 15% 20%, var(--bg1) 0%, var(--bg0) 70%);
+      color: var(--text);
+      overflow-y: auto;          /* permite scroll vertical */
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Fondo orbital */
+    .scene { position: fixed; inset: 0; pointer-events: none; z-index: -10; }
+    .stars { position: absolute; inset: 0; background: transparent url('{% static "img/stars.png" %}') repeat; animation: moveStars 180s linear infinite; opacity: .35; }
+    @keyframes moveStars { from { background-position: 0 0; } to { background-position: -9000px 4500px; } }
+    .grid { position: absolute; inset: 0; background-image:
+      radial-gradient(circle at 20% 30%, rgba(124,58,237,.12), transparent 55%),
+      radial-gradient(circle at 80% 70%, rgba(34,211,238,.12), transparent 55%),
+      linear-gradient(transparent 98%, rgba(34,211,238,.15) 100%),
+      linear-gradient(90deg, transparent 98%, rgba(124,58,237,.15) 100%);
+      background-size: 100% 100%, 100% 100%, 24px 24px, 24px 24px; mix-blend-mode: screen; opacity: .3;
+    }
+
+    /* Vista principal con padding para respirar al hacer scroll */
+    .viewport {
+      min-height: 100dvh;
+      display: flex;
+      align-items: flex-start;     /* comienza arriba para evitar saltos */
+      justify-content: center;
+      position: relative;
+      z-index: 10;
+      padding: 4vh 0 6vh;          /* espacio superior e inferior para scroll cómodo */
+    }
+
+    /* Tarjeta orbital (sin límite de altura) */
+    .card {
+      position: relative;
+      width: min(620px, 94vw);
+      margin: 0 auto;
+      border-radius: 20px;
+      background: var(--glass);
+      backdrop-filter: blur(20px) saturate(1.06);
+      border: 1.6px solid var(--border);
+      box-shadow: 0 6px 28px rgba(0,0,0,.55), inset 0 0 22px rgba(34,211,238,.08);
+      padding: clamp(16px, 4vh, 28px);
+      display: grid;
+      grid-template-rows: auto auto auto;
+      row-gap: clamp(12px, 2.6vh, 22px);
+      overflow: visible; /* no recorta contenido interno */
+    }
+
+    /* Borde holográfico con máscara */
+    .card::before{
+      content:""; position:absolute; inset:-2px; border-radius:22px; padding:2px; opacity:.6;
+      background: conic-gradient(from 180deg at 50% 50%, rgba(34,211,238,.55), rgba(37,99,235,.45), rgba(124,58,237,.55), rgba(236,72,153,.45), rgba(34,211,238,.55));
+      mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      mask-composite: exclude;
+      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor;
+      pointer-events:none;
+    }
+
+    /* Header visual */
+    .lock { display: grid; place-items:center; width: clamp(60px, 9vh, 100px); height: clamp(60px, 9vh, 100px); margin: 0 auto; border-radius: 50%;
+      background: radial-gradient(closest-side, rgba(34,211,238,.22), rgba(124,58,237,.24));
+      box-shadow: 0 0 24px rgba(124,58,237,.35), 0 0 16px rgba(34,211,238,.28) inset; position: relative; }
+    .lock::after{ content:"🔑"; font-size: clamp(1.1rem, 3.6vh, 1.8rem); text-shadow: 0 0 10px rgba(34,211,238,.6); }
+    .ring { position:absolute; inset:-4px; border-radius:50%; border: 2px dashed rgba(34,211,238,.45); animation: spin 16s linear infinite; }
+    @keyframes spin { from{transform:rotate(0)} to{transform:rotate(360deg)} }
+    .title {
+      text-align:center; font-weight: 900; letter-spacing:.08em; text-transform: uppercase;
+      font-size: clamp(1.2rem, 4.6vh, 2rem);
+      background: linear-gradient(90deg, var(--cyan), var(--blue), var(--purple));
+      -webkit-background-clip:text; background-clip:text; color: transparent;
+      text-shadow: 0 0 16px rgba(34,211,238,.28); margin: 0;
+    }
+    .subtitle {
+      text-align:center; font-size: clamp(.78rem, 2.4vh, .95rem);
+      color: rgba(226,245,255,.88); letter-spacing: .16em; text-transform: uppercase; margin: 0;
+    }
+
+    /* Mensajes */
+    .messages { text-align:center; margin: 0; }
+    .message { font-size: clamp(.82rem, 2.2vh, .95rem); margin: 0; }
+    .success { color: var(--success); font-weight: 700; text-shadow: 0 0 10px var(--success); }
+    .error   { color: var(--danger); font-weight: 700; text-shadow: 0 0 10px var(--danger); }
+
+    /* Formulario con separación generosa y botón visible */
+    .form {
+      display: grid;
+      grid-template-rows: auto auto auto auto;
+      row-gap: clamp(18px, 3.2vh, 28px);
+      margin-top: clamp(10px, 2vh, 18px);
+    }
+
+    /* Bloque único por campo: borde/sombra en el contenedor */
+    .field {
+      border: 1.6px solid var(--border);
+      border-radius: 14px;
+      background: rgba(5,8,15,.65);
+      box-shadow: inset 0 0 12px rgba(34,211,238,.08);
+      display: grid;
+      grid-template-rows: auto auto;
+    }
+
+    .field-head {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      column-gap: 10px;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .icon { width: 18px; height: 18px; filter: drop-shadow(0 0 6px rgba(34,211,238,.5)); }
+    .label-inline { font-size: .78rem; letter-spacing: .12em; text-transform: uppercase; color: rgba(226,245,255,.86); }
+    .icon.tick { width: 18px; height: 18px; pointer-events: none; }
+
+    .field-body { padding: 16px; }
+    .input {
+      width: 100%;
+      border: 0; outline: none; background: transparent;
+      color: var(--text); font-size: 1rem; letter-spacing: .02em; caret-color: var(--cyan);
+      padding: 8px 0;
+    }
+
+    /* Helpers con aire antes y después */
+    .helper {
+      margin: clamp(14px, 3vh, 24px) auto;
+      font-size: .86rem; color: #cfd8dc; text-align: center; font-style: italic; line-height: 1.5;
+      max-width: 560px;
+    }
+    .valid { color: var(--success); text-shadow: 0 0 8px var(--success); }
+    .invalid { color: var(--danger); text-shadow: 0 0 8px var(--danger); }
+
+    /* Acciones con separación superior extra y botón de envío */
+    .actions {
+      margin-top: clamp(16px, 3.2vh, 30px);
+      display: grid; row-gap: 10px; justify-items: center;
+    }
+    .btn {
+      display:inline-flex; align-items:center; justify-content:center;
+      width: 100%; max-width: 420px;
+      padding: clamp(12px, 2.6vh, 18px);
+      font-size: clamp(1rem, 2.4vh, 1.12rem);
+      font-weight: 800; letter-spacing: .06em; text-transform: uppercase;
+      border: 0; border-radius: 14px; color: #fff; cursor: pointer;
+      background: linear-gradient(90deg, var(--cyan), var(--blue), var(--purple), var(--pink), var(--cyan));
+      background-size: 260% 260%;
+      box-shadow: 0 10px 22px rgba(37,99,235,.25), 0 0 22px rgba(34,211,238,.35);
+      transition: transform .18s ease, box-shadow .18s ease, opacity .18s ease, filter .18s ease;
+    }
+    .btn:hover { transform: translateY(-1px) scale(1.015); box-shadow: 0 12px 26px rgba(37,99,235,.35), 0 0 28px rgba(34,211,238,.45); filter: saturate(1.08); }
+    .btn:active { transform: translateY(0) scale(.995); }
+
+    .hint { margin: 0; text-align:center; font-size: clamp(.82rem, 2vh, .95rem); color: #cfd8dc; font-style: italic; }
+
+    /* Responsivo por altura: mantenemos scroll, solo ajustamos márgenes/padding */
+    @media (max-height: 700px) {
+      .viewport { padding: 3vh 0 5vh; }
+      .form { row-gap: clamp(16px, 2.8vh, 26px); }
+      .field-body { padding: 14px; }
+      .helper { margin: clamp(12px, 2.4vh, 20px) auto; }
+      .actions { margin-top: clamp(14px, 2.8vh, 26px); }
+    }
+    @media (max-height: 560px) {
+      .viewport { padding: 2.5vh 0 4.5vh; }
+      .form { row-gap: clamp(14px, 2.4vh, 24px); }
+      .field-body { padding: 12px; }
+      .helper { margin: clamp(10px, 2vh, 18px) auto; }
+      .actions { margin-top: clamp(12px, 2.4vh, 24px); }
+    }
+
+    @media (prefers-reduced-motion: reduce){
+      .stars, .grid, .ring { animation: none !important; }
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+  </style>
+</head>
+<body>
+  <!-- Fondo orbital -->
+  <div class="scene" aria-hidden="true">
+    <div class="stars"></div>
+    <div class="grid"></div>
+  </div>
+
+  <!-- Vista centrada con scroll vertical habilitado -->
+  <div class="viewport">
+    <section class="card" role="region" aria-labelledby="titulo-confirmacion">
+      <div class="lock"><div class="ring"></div></div>
+      <h1 id="titulo-confirmacion" class="title">Confirmación de recuperación</h1>
+      <p class="subtitle">Establece tu nueva contraseña</p>
+
+      {% if messages %}
+        <div class="messages" role="status" aria-live="polite">
+          {% for message in messages %}
+            <p class="message {{ message.tags }}">{{ message|safe }}</p>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <!-- Formulario de confirmación -->
+      <form method="post" class="form" aria-label="Formulario de nueva contraseña">
+        {% csrf_token %}
+
+        <!-- Campo: nueva contraseña -->
+        <div class="field">
+          <div class="field-head">
+            <svg class="icon" aria-hidden="true" viewBox="0 0 24 24" fill="none">
+              <path d="M7 10V8a5 5 0 0 1 10 0v2" stroke="#22d3ee" stroke-width="1.6"/>
+              <rect x="4" y="10" width="16" height="10" rx="2" stroke="#7c3aed" stroke-width="1.6"/>
+            </svg>
+            <span class="label-inline">Nueva contraseña</span>
+            <svg class="icon tick" aria-hidden="true" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="10" stroke="#2563eb" stroke-width="1.2" opacity=".45"/>
+              <path d="M8 12l2.5 2.5L16 9" stroke="#00ffcc" stroke-width="2" opacity=".0" id="checkmark1"/>
+            </svg>
+          </div>
+          <div class="field-body">
+            <label for="id_new_password1" class="sr-only">Nueva contraseña</label>
+            <input
+              id="id_new_password1"
+              class="input"
+              type="password"
+              name="new_password1"
+              autocomplete="new-password"
+              required
+              aria-required="true"
+              aria-describedby="helper1"
+              placeholder="••••••••" />
+          </div>
+        </div>
+        <p id="helper1" class="helper">Usa al menos 8 caracteres y combina letras, números y símbolos.</p>
+
+        <!-- Campo: confirmar contraseña -->
+        <div class="field">
+          <div class="field-head">
+            <svg class="icon" aria-hidden="true" viewBox="0 0 24 24" fill="none">
+              <path d="M7 10V8a5 5 0 0 1 10 0v2" stroke="#22d3ee" stroke-width="1.6"/>
+              <rect x="4" y="10" width="16" height="10" rx="2" stroke="#7c3aed" stroke-width="1.6"/>
+            </svg>
+            <span class="label-inline">Confirmar contraseña</span>
+            <svg class="icon tick" aria-hidden="true" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="10" stroke="#2563eb" stroke-width="1.2" opacity=".45"/>
+              <path d="M8 12l2.5 2.5L16 9" stroke="#00ffcc" stroke-width="2" opacity=".0" id="checkmark2"/>
+            </svg>
+          </div>
+          <div class="field-body">
+            <label for="id_new_password2" class="sr-only">Confirmar contraseña</label>
+            <input
+              id="id_new_password2"
+              class="input"
+              type="password"
+              name="new_password2"
+              autocomplete="new-password"
+              required
+              aria-required="true"
+              aria-describedby="helper2"
+              placeholder="••••••••" />
+          </div>
+        </div>
+        <p id="helper2" class="helper">Repite exactamente la misma contraseña para confirmar.</p>
+
+        <!-- Acciones: botón visible y con scroll cómodo -->
+        <div class="actions">
+          <button type="submit" class="btn" aria-label="Guardar nueva contraseña">
+            🚀 Guardar nueva contraseña
+          </button>
+          <p class="hint">Tu contraseña se actualizará inmediatamente tras confirmar.</p>
+        </div>
+      </form>
+    </section>
+  </div>
+
+  <script>
+    // Microinteracción: feedback visual (no bloquea envío)
+    (function(){
+      const pass1 = document.getElementById('id_new_password1');
+      const pass2 = document.getElementById('id_new_password2');
+      const check1 = document.getElementById('checkmark1');
+      const check2 = document.getElementById('checkmark2');
+      const helper1 = document.getElementById('helper1');
+      const helper2 = document.getElementById('helper2');
+
+      function strengthOk(v){ return v && v.length >= 8; }
+
+      function update(){
+        const v1 = pass1.value.trim();
+        const v2 = pass2.value.trim();
+        const ok1 = strengthOk(v1);
+        const ok2 = ok1 && v2.length > 0 && v2 === v1;
+
+        if (check1) check1.style.opacity = ok1 ? '1' : '0';
+        if (check2) check2.style.opacity = ok2 ? '1' : '0';
+
+        helper1.classList.toggle('valid', ok1);
+        helper1.classList.toggle('invalid', !ok1);
+        helper2.classList.toggle('valid', ok2);
+        helper2.classList.toggle('invalid', !ok2);
+
+        helper1.textContent = ok1
+          ? 'Fuerte. Mantén la combinación y evita patrones comunes.'
+          : 'Usa al menos 8 caracteres y combina letras, números y símbolos.';
+        helper2.textContent = ok2
+          ? 'Coinciden. Listo para guardar.'
+          : 'Repite exactamente la misma contraseña para confirmar.';
+      }
+
+      [pass1, pass2].forEach(el => {
+        el && el.addEventListener('input', update);
+        el && el.addEventListener('focus', update);
+        el && el.addEventListener('blur', update);
+      });
+    })();
+  </script>
+</body>
+</html>

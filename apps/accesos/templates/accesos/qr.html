@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es" class="bg-gray-950 text-white">
+<head>
+    <meta charset="UTF-8">
+    <title>QR de acceso</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 font-mono tracking-wide">
+
+    <!-- Encabezado -->
+    <header class="text-center mb-8">
+        <h1 class="text-cyan-400 text-2xl font-bold tracking-wide">🎟️ Código QR generado</h1>
+        <p class="text-sm text-gray-400 mt-2">Este código puede ser escaneado para validar identidad y acceso</p>
+    </header>
+
+    <!-- QR generado -->
+    <section class="bg-gray-900 p-6 rounded-xl neon-border shadow-xl flex flex-col items-center">
+        <img src="data:image/png;base64,{{ qr_base64 }}" class="w-64 h-64 border-4 border-cyan-500 rounded-xl shadow-lg" alt="QR Code" />
+
+        <p class="text-sm text-gray-400">Token asignado:</p>
+        <p class="text-cyan-300 text-xs font-mono tracking-wider break-all">{{ token }}</p>
+
+        {% if usuario %}
+        <div class="mt-4 text-center text-sm text-gray-400">
+            <p>Usuario: <span class="text-cyan-300 font-semibold">{{ usuario.username }}</span></p>
+            <p>Rol: <span class="text-cyan-300">{{ usuario.rol }}</span></p>
+            <p>Generado: <span class="text-cyan-300">{{ usuario.qr_created_at|date:"d M Y H:i:s" }}</span></p>
+        </div>
+        {% endif %}
+    </section>
+
+    <!-- Footer -->
+    <footer class="mt-12 text-center text-xs text-gray-500">
+        <p>🔐 Sistema de Control de Acceso — QR dinámico</p>
+        <p class="mt-1">Desarrollado por Barberá Digital Studio · {{ now|date:"d M Y" }}</p>
+    </footer>
+
+</body>
+</html>
+

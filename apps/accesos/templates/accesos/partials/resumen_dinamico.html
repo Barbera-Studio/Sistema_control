@@ -1,0 +1,94 @@
+{% load static %}
+<section class="bg-gray-950 border-4 border-blue-600 rounded-3xl px-20 py-12 shadow-[0_0_100px_rgba(0,255,255,0.4)] space-y-16">
+  <h2 class="text-4xl font-bold text-blue-400 tracking-widest text-center drop-shadow-[0_0_20px_rgba(0,255,255,0.6)]">
+    📊 ESTADÍSTICAS DE ACCESO
+  </h2>
+
+  <div class="grid grid-cols-1 2xl:grid-cols-2 gap-20">
+
+    <!-- 🔷 Accesos por Rol -->
+    <div class="bg-gray-900/90 px-10 py-6 rounded-3xl shadow-[0_0_80px_rgba(0,255,255,0.3)] space-y-8">
+      <h3 class="text-cyan-300 text-4xl font-bold text-center tracking-wide">Accesos por Rol</h3>
+      <div style="height: 400px;">
+        <canvas id="rolChart" width="400" height="400"></canvas>
+      </div>
+    </div>
+
+    <!-- 🟢 Resultados de Validación -->
+    <div class="bg-gray-900/90 px-10 py-6 rounded-3xl shadow-[0_0_80px_rgba(0,255,255,0.3)] space-y-8">
+      <h3 class="text-cyan-300 text-4xl font-bold text-center tracking-wide">Resultados de Validación</h3>
+      <div style="height: 400px;">
+        <canvas id="resultadoChart" width="400" height="400"></canvas>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ✅ Datos JSON embebidos -->
+<script id="datos-json" type="application/json">
+  {
+    "usuarios": {{ datos_usuarios_json|safe }},
+    "accesos": {{ datos_accesos_json|safe }}
+  }
+</script>
+
+<!-- 🧾 HISTORIAL DE ACCESOS -->
+<section class="bg-gray-950 border-t-4 border-blue-600 mt-24 pt-12 px-6 lg:px-12 space-y-8 animate-fade-in">
+  <h2 class="text-4xl font-bold text-blue-400 tracking-widest text-center drop-shadow-[0_0_20px_rgba(0,255,255,0.6)]">
+    🧾 HISTORIAL DE ACCESOS
+  </h2>
+
+  {% if eventos %}
+  <div class="overflow-x-auto rounded-2xl shadow-[0_0_80px_rgba(0,255,255,0.2)]">
+    <table class="min-w-full text-sm text-left text-gray-300">
+      <thead class="bg-gray-800 text-cyan-300 text-base uppercase tracking-wide">
+        <tr>
+          <th class="px-6 py-4">Usuario</th>
+          <th class="px-6 py-4">Rol</th>
+          <th class="px-6 py-4">Resultado</th>
+          <th class="px-6 py-4">Fecha</th>
+        </tr>
+      </thead>
+      <tbody class="bg-gray-900/80 divide-y divide-gray-700">
+        {% for evento in eventos %}
+          <tr class="hover:bg-gray-800/60 transition duration-300 ease-in-out">
+  <td class="px-6 py-4 font-medium text-white">
+    {% if evento.usuario %}
+      {% if evento.usuario.username %}
+        {{ evento.usuario.username }}
+      {% else %}
+        <span class="italic text-gray-400">Nombre no definido</span>
+      {% endif %}
+    {% else %}
+      <span class="italic text-gray-400">No registrado</span>
+    {% endif %}
+  </td>
+  <td class="px-6 py-4">
+    {% if evento.usuario %}
+      {% if evento.usuario.rol %}
+        {{ evento.usuario.rol }}
+      {% else %}
+        <span class="italic text-gray-400">Rol no definido</span>
+      {% endif %}
+    {% else %}
+      <span class="italic text-gray-400">Sin rol</span>
+    {% endif %}
+  </td>
+  <td class="px-6 py-4">
+    <span class="{% if evento.resultado == 'permitido' %}text-green-400{% elif evento.resultado == 'denegado' %}text-red-400{% else %}text-yellow-400{% endif %}">
+      {{ evento.resultado|capfirst }}
+    </span>
+  </td>
+  <td class="px-6 py-4">
+    {{ evento.fecha|date:"d/m/Y H:i" }}
+  </td>
+</tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="text-center text-gray-400 italic text-lg">No hay eventos registrados aún.</p>
+  {% endif %}
+</section>

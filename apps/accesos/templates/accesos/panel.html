@@ -1,0 +1,428 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Panel Futurista — Control de Acceso</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <link rel="icon" type="image/png" href="{% static 'img/favicon_qr.png' %}">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            deep: '#080d1a',
+            card: '#0f172a',
+            glass: 'rgba(13,20,40,0.65)',
+            neon: { cyan: '#22d3ee', blue: '#2563eb', purple: '#7c3aed', pink: '#ec4899' }
+          },
+          boxShadow: {
+            glowCyan: '0 0 24px rgba(34,211,238,.40)',
+            glowPurple: '0 0 28px rgba(124,58,237,.45)',
+            glowRed: '0 0 32px rgba(239,68,68,.50)'
+          },
+          animation: {
+            fadeUp: 'fadeUp .45s ease-out both',
+            slowPulse: 'slowPulse 5s ease-in-out infinite',
+            shimmer: 'shimmer 2.8s ease-in-out infinite',
+            orbit: 'orbit 14s linear infinite',
+            spinSlow: 'spin 20s linear infinite'
+          },
+          keyframes: {
+            fadeUp: { '0%': { opacity: 0, transform: 'translateY(10px)' }, '100%': { opacity: 1, transform: 'translateY(0)' } },
+            slowPulse: { '0%,100%': { opacity:.92 }, '50%': { opacity:1 } },
+            shimmer: { '0%': { opacity:.35 }, '50%': { opacity:.85 }, '100%': { opacity:.35 } },
+            orbit: { '0%': { transform:'rotate(0deg) translateX(18px) rotate(0deg)' }, '100%': { transform:'rotate(360deg) translateX(18px) rotate(-360deg)' } }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Libraries -->
+  <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+
+<body class="bg-deep text-white antialiased selection:bg-neon.purple/25">
+  <!-- Fondo orbital -->
+  <div class="fixed inset-0 -z-10 pointer-events-none">
+    <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(124,58,237,.22),transparent_55%)]"></div>
+    <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(34,211,238,.18),transparent_60%)]"></div>
+    <div class="absolute inset-0">
+      {% for _ in "xxxxxxxxxxxxxxxxxxxxxx" %}
+        <span class="absolute w-1 h-1 bg-neon.cyan rounded-full animate-shimmer"
+              style="top: {{ forloop.counter|add:3 }}%; left: {{ forloop.counter|add:7 }}%; opacity:.6; filter: blur(.6px);"></span>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="w-full max-w-[1400px] mx-auto px-3 sm:px-6 md:px-8 pt-4 sm:pt-8">
+    <!-- Topbar -->
+    <div class="grid grid-cols-[auto_1fr_auto] items-center gap-3 sm:gap-6 h-14 sm:h-16 md:h-20 animate-fadeUp relative">
+      <!-- Botón avatar “todo en uno”, más pequeño y morado, con margen lateral -->
+      <div class="relative pl-1 sm:pl-2 md:pl-3">
+        <a href="{% url 'usuarios:login' %}" aria-label="Ir a login"
+           class="relative inline-flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 md:w-12 md:h-12 rounded-full
+                  bg-gradient-to-br from-purple-600 via-purple-700 to-purple-800
+                  ring-2 ring-purple-400/60 hover:ring-purple-300/80 focus:outline-none focus:ring-2 focus:ring-purple-300
+                  shadow-[0_0_24px_rgba(124,58,237,.45)]
+                  transition-transform hover:scale-105">
+          <img src="{% if user.avatar %}{{ user.avatar.url }}{% else %}{% static 'img/sin_avatar.png' %}{% endif %}"
+               alt="Avatar"
+               class="w-[72%] h-[72%] rounded-full object-cover shadow-inner" />
+        </a>
+      </div>
+
+      <!-- Título -->
+      <header class="text-center">
+        <h1 class="text-2xl sm:text-3xl md:text-4xl font-extrabold text-neon.cyan tracking-[0.12em] sm:tracking-[0.18em]">🔐 PANEL FUTURISTA</h1>
+        <p class="text-gray-300 mt-1 text-[11px] sm:text-xs md:text-sm uppercase tracking-widest">Acceso biométrico · QR · PIN</p>
+      </header>
+
+      <!-- Notificaciones con margen lateral -->
+      <div class="justify-self-end pr-1 sm:pr-2 md:pr-3">
+        <button id="btnNotificaciones" type="button" aria-label="Accesos críticos"
+                class="relative inline-flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-full
+                       bg-gradient-to-br from-red-600 via-red-700 to-red-800 text-white text-base sm:text-lg md:text-xl font-bold
+                       shadow-glowRed focus:outline-none focus:ring-2 focus:ring-red-400 transition-transform hover:scale-105">
+          🔔
+          <span id="contador-alertas"
+                class="absolute -top-1 -right-1 md:-top-2 md:-right-2 bg-red-600 text-white text-[10px] md:text-xs px-1 md:px-1.5 py-0.5 md:py-1 rounded-full font-bold shadow"
+                hx-get="{% url 'accesos:contador_alertas' %}" hx-trigger="load, event:actualizar-panel" hx-swap="outerHTML">
+            {% if alertas and alertas|length > 0 %}{{ alertas|length }}{% endif %}
+          </span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Tarjetas: QR + PIN (más separación superior respecto a topbar) -->
+    <div class="mt-8 sm:mt-10 grid grid-cols-1 sm:grid-cols-2 gap-6">
+      <!-- QR (primer card) -->
+      <section class="relative p-4 sm:p-5 rounded-3xl border border-neon.cyan/60 bg-glass backdrop-blur-md shadow-glowCyan z-0 overflow-visible">
+        <h2 class="sr-only">Escaneo de código QR</h2>
+        <div class="relative w-56 h-56 sm:w-64 sm:h-64 md:w-72 md:h-72 mx-auto">
+          <div class="absolute inset-0 rounded-full border border-neon.cyan/30"></div>
+          <div class="absolute inset-0 rounded-full border border-neon.purple/30 animate-orbit"></div>
+          <div id="qr-reader" class="absolute inset-0 rounded-2xl overflow-hidden"></div>
+
+          <div id="qr-status"
+               class="absolute inset-0 flex flex-col items-center justify-center text-center text-[11px] sm:text-sm md:text-base text-gray-200 bg-deep/80 px-3 rounded-2xl">
+            <p>No se pudo acceder a la cámara<br><span class="text-neon.cyan">Escáner inactivo</span></p>
+            {% if user.is_authenticated and user.id %}
+              <a href="{% url 'accesos:generar_qr' user.id %}"
+                 class="mt-3 sm:mt-4 px-3 sm:px-5 py-1.5 sm:py-2 text-[11px] sm:text-sm font-bold uppercase rounded-xl border border-neon.cyan text-neon.cyan bg-gradient-to-r from-neon.purple/40 via-neon.blue/40 to-neon.cyan/40 hover:scale-105 transition shadow-glowCyan">🌀 Generar QR</a>
+            {% else %}
+              <button type="button" class="mt-3 sm:mt-4 px-3 sm:px-5 py-1.5 sm:py-2 text-[11px] sm:text-sm font-bold uppercase rounded-xl border border-gray-600/70 text-gray-400 bg-[#0f172a] cursor-not-allowed">🌀 Generar QR</button>
+              <p class="mt-2 text-[11px] text-gray-400">Inicie sesión para generar su código QR personal.</p>
+            {% endif %}
+          </div>
+        </div>
+      </section>
+
+      <!-- PIN -->
+      <section class="p-5 sm:p-6 md:p-8 rounded-3xl bg-glass backdrop-blur-md border border-neon.cyan/60 shadow-glowCyan z-0">
+        <h2 class="text-xl sm:text-2xl md:text-3xl font-bold text-neon.cyan text-center">🔑 Validación de Identidad</h2>
+        <form method="POST"
+              hx-post="{% url 'accesos:validar_pin' %}"
+              hx-target="#resultado"
+              hx-swap="innerHTML"
+              hx-on="htmx:afterRequest: setTimeout(() => document.body.dispatchEvent(new Event('actualizar-panel')), 120)"
+              class="mt-5 space-y-4 sm:space-y-6">
+          {% csrf_token %}
+          <div class="flex flex-col space-y-2">
+            <label for="pin" class="text-[11px] sm:text-sm text-gray-300">Ingrese su PIN de acceso</label>
+            <input type="text" name="pin" id="pin" placeholder="🔐 Código PIN" inputmode="numeric" autocomplete="one-time-code" required
+                   class="w-full px-3 sm:px-5 py-2 sm:py-3 rounded-xl bg-[#0f172a]/80 text-neon.cyan placeholder-neon.purple/70 focus:outline-none focus:ring-2 focus:ring-neon.cyan focus:bg-[#0f172a] transition text-sm sm:text-lg text-center tracking-[0.04em] sm:tracking-[0.08em]" />
+          </div>
+          <button type="submit" class="w-full py-2 sm:py-3 bg-gradient-to-r from-neon.cyan to-neon.blue hover:from-neon.purple hover:to-neon.cyan text-white font-bold rounded-xl transition shadow-glowCyan">🚀 Validar PIN</button>
+        </form>
+        <div class="my-5 sm:my-6 border-t border-gray-700 text-center text-[11px] sm:text-sm text-gray-400">o escanee su código QR</div>
+        <div id="resultado" class="mt-5 sm:mt-6 text-center text-sm sm:text-lg font-semibold text-neon.cyan"></div>
+      </section>
+    </div>
+
+    <!-- Estadísticas -->
+    <section class="w-full mt-10 sm:mt-12 md:mt-16 animate-fadeUp">
+      <div class="w-full max-w-[96%] mx-auto p-4 sm:p-6 rounded-3xl bg-glass backdrop-blur-md border border-neon.cyan/60 shadow-glowCyan z-0">
+        <h3 class="text-lg sm:text-2xl font-bold text-neon.cyan text-center">ESTADÍSTICAS DE ACCESO</h3>
+        <p class="text-sm sm:text-lg text-gray-300 text-center mt-1 sm:mt-2">Accesos por Rol</p>
+        <div class="relative w-full h-52 sm:h-72 md:h-96 mt-4">
+          <canvas id="rolChart" aria-label="Accesos por Rol" role="img"></canvas>
+        </div>
+      </div>
+
+      <div class="w-full max-w-[96%] mx-auto p-4 sm:p-6 mt-6 sm:mt-8 rounded-3xl bg-glass backdrop-blur-md border border-neon.cyan/60 shadow-glowCyan z-0">
+        <h3 class="text-lg sm:text-2xl font-bold text-neon.cyan text-center">Resultados de Validación</h3>
+        <div class="flex flex-col sm:flex-row justify-center items-center gap-1 sm:gap-3 mt-2 text-[11px] sm:text-sm">
+          <span class="flex items-center gap-1"><span class="w-3 h-3 bg-green-500 rounded-sm shadow-glowCyan"></span> Permitido</span>
+          <span class="flex items-center gap-1"><span class="w-3 h-3 bg-orange-500 rounded-sm shadow-glowCyan"></span> Fuera de horario</span>
+          <span class="flex items-center gap-1"><span class="w-3 h-3 bg-red-500 rounded-sm shadow-glowCyan"></span> Denegado</span>
+        </div>
+        <div class="relative w-full h-52 sm:h-72 md:h-96 mt-4">
+          <canvas id="resultadoChart" aria-label="Resultados de Validación" role="img"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- Historial de eventos -->
+    <section class="w-full mt-8 md:mt-10 animate-fadeUp">
+      <!-- Cards móvil -->
+      <div class="block sm:hidden w-full max-w-[96%] mx-auto p-3 rounded-3xl bg-glass backdrop-blur-md border border-neon.cyan/60 shadow-glowCyan z-0">
+        {% for e in eventos %}
+          {% with est=e.resultado|default_if_none:""|lower %}
+          <div class="flex flex-col border-b border-gray-700/60 py-2 last:border-b-0">
+            <div class="flex items-center justify-between">
+              <span class="font-semibold text-neon.cyan truncate">{{ e.usuario.username|default:"No registrado" }}</span>
+              {% if est == "permitido" %}
+                <span class="text-green-400 font-bold">✅ Permitido</span>
+              {% elif est == "denegado" %}
+                <span class="text-red-400 font-bold">❌ Denegado</span>
+              {% else %}
+                <span class="text-orange-400 font-bold">⏰ Fuera de horario</span>
+              {% endif %}
+            </div>
+            <div class="text-[11px] text-gray-400 mt-1">Rol: {{ e.usuario.rol|default:"Desconocido" }}</div>
+            <div class="text-[10px] text-gray-500 mt-0.5">{{ e.fecha|date:"d/m/Y H:i" }}</div>
+          </div>
+          {% endwith %}
+        {% empty %}
+          <p class="text-center text-gray-400 text-sm">Sin eventos recientes.</p>
+        {% endfor %}
+      </div>
+
+      <!-- Tabla desktop -->
+      <div class="hidden sm:block w-full max-w-[96%] mx-auto p-4 rounded-3xl bg-glass backdrop-blur-md border border-neon.cyan/60 shadow-glowCyan overflow-visible z-0">
+        <div class="overflow-x-auto">
+          <table class="min-w-full text-sm md:text-base">
+            <thead>
+              <tr class="text-left border-b border-gray-700">
+                <th class="py-2 pr-4 text-neon.cyan font-semibold">Usuario</th>
+                <th class="py-2 pr-4 text-neon.cyan font-semibold">Rol</th>
+                <th class="py-2 text-neon.cyan font-semibold">Estado</th>
+                <th class="py-2 text-neon.cyan font-semibold">Fecha</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for e in eventos %}
+                {% with est=e.resultado|default_if_none:""|lower %}
+                <tr class="border-b border-gray-800 hover:bg-[#0b1425] transition-colors">
+                  <td class="py-2 pr-4 text-white">{{ e.usuario.username|default:"No registrado" }}</td>
+                  <td class="py-2 pr-4 text-gray-300">{{ e.usuario.rol|default:"Desconocido" }}</td>
+                  <td class="py-2">
+                    {% if est == "permitido" %}
+                      <span class="inline-flex items-center gap-1 text-green-400 font-semibold">✅ Permitido</span>
+                    {% elif est == "denegado" %}
+                      <span class="inline-flex items-center gap-1 text-red-400 font-semibold">❌ Denegado</span>
+                    {% else %}
+                      <span class="inline-flex items-center gap-1 text-orange-400 font-semibold">⏰ Fuera de horario</span>
+                    {% endif %}
+                  </td>
+                  <td class="py-2 text-gray-300">{{ e.fecha|date:"d/m/Y H:i" }}</td>
+                </tr>
+                {% endwith %}
+              {% empty %}
+                <tr><td colspan="4" class="py-3 text-center text-gray-400">Sin eventos recientes.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Panel de accesos críticos (derecha) -->
+    <div id="panelNotificaciones" role="dialog" aria-modal="true" aria-labelledby="titulo-notificaciones"
+         hx-get="{% url 'accesos:eventos_recientes' %}" hx-trigger="load, event:actualizar-panel" hx-swap="innerHTML"
+         class="fixed inset-0 sm:inset-auto sm:top-0 sm:right-0 w-full sm:max-w-md h-full bg-gradient-to-b from-[#0f172a] via-deep to-black p-4 sm:p-6 overflow-y-auto hidden z-[10040] border-l-0 sm:border-l border-red-600">
+      <div class="flex items-center justify-between sm:hidden mb-4">
+        <h2 id="titulo-notificaciones" class="text-sm font-bold text-white">🔔 Accesos críticos</h2>
+        <button type="button" class="px-2.5 py-1.5 text-[11px] font-bold rounded bg-red-600 text-white" onclick="cerrarNotificaciones()">Cerrar</button>
+      </div>
+      <!-- Contenido HTMX -->
+    </div>
+
+    <!-- Backdrop global -->
+    <div id="backdropPaneles" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden z-[10030]" aria-hidden="true"></div>
+
+    <!-- Footer -->
+    <footer class="mt-12 md:mt-20 w-full text-center text-xs sm:text-sm text-gray-400 border-t border-gray-800 pt-4 sm:pt-6 pb-6 sm:pb-8">
+      <p>🔒 Sistema de Control de Acceso — Versión Futurista</p>
+      <p class="mt-1">Desarrollado por <span class="text-cyan-400">Barberá Digital Studio</span> · {{ now|date:"d M Y" }}</p>
+      <p class="mt-1 text-[11px] sm:text-xs text-gray-600">Todos los accesos quedan registrados en la red cuántica</p>
+    </footer>
+  </div>
+
+  <!-- Scripts (al final para asegurar que el DOM existe) -->
+  <script>
+    // CSRF helper
+    function getCookie(name) { const v = `; ${document.cookie}`; const p = v.split(`; ${name}=`); if (p.length === 2) return p.pop().split(';').shift(); }
+    const CSRF_TOKEN = getCookie('csrftoken');
+
+    // Panel de accesos críticos: apertura/cierre + backdrop
+    (function () {
+      const btnNotif = document.getElementById('btnNotificaciones');
+      const panelNotif = document.getElementById('panelNotificaciones');
+      const backdrop = document.getElementById('backdropPaneles');
+      if (!panelNotif || !backdrop) return;
+
+      const showBackdrop = () => { backdrop.classList.remove('hidden'); };
+      const hideBackdrop = () => { backdrop.classList.add('hidden'); };
+
+      function abrirNotif() {
+        panelNotif.classList.remove('hidden');
+        showBackdrop();
+      }
+      function cerrarNotif() {
+        panelNotif.classList.add('hidden');
+        hideBackdrop();
+      }
+      window.cerrarNotificaciones = cerrarNotif;
+
+      btnNotif && btnNotif.addEventListener('click', abrirNotif);
+      backdrop.addEventListener('click', () => { if (!panelNotif.classList.contains('hidden')) cerrarNotif(); });
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !panelNotif.classList.contains('hidden')) cerrarNotif(); });
+    })();
+
+    // QR scanner
+    (function () {
+      const containerId = 'qr-reader';
+      const readerEl = document.getElementById(containerId);
+      if (!readerEl) return;
+
+      const html5QrCode = new Html5Qrcode(containerId);
+      Html5Qrcode.getCameras()
+        .then(devices => {
+          const statusEl = document.getElementById("qr-status");
+          if (devices && devices.length) {
+            if (statusEl) statusEl.style.display = "none";
+            html5QrCode.start(
+              devices[0].id,
+              { fps: 10, qrbox: { width: 180, height: 180 } },
+              decodedText => {
+                fetch("{% url 'accesos:validar_qr' %}", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/x-www-form-urlencoded", "X-CSRFToken": CSRF_TOKEN || "" },
+                  body: new URLSearchParams({ qr_token: decodedText })
+                })
+                .then(res => res.text())
+                .then(html => {
+                  const resultado = document.getElementById("resultado");
+                  if (resultado) resultado.innerHTML = html;
+                  setTimeout(() => { document.body.dispatchEvent(new Event("actualizar-panel")); }, 120);
+                })
+                .catch(() => {
+                  const resultado = document.getElementById("resultado");
+                  if (resultado) resultado.textContent = "Error validando QR.";
+                });
+              }
+            ).catch(() => { if (statusEl) statusEl.style.display = "flex"; });
+          } else {
+            if (statusEl) statusEl.style.display = "flex";
+          }
+        })
+        .catch(() => {
+          const st = document.getElementById("qr-status"); if (st) st.style.display = "flex";
+        });
+    })();
+
+    // Gráficas — datos del contexto Django
+    function renderizarGraficos() {
+      const rolCtx = document.getElementById("rolChart")?.getContext("2d");
+      const resCtx = document.getElementById("resultadoChart")?.getContext("2d");
+
+      const rolesLabels = [{% for r in roles %}"{{ r.rol_nombre|escapejs }}"{% if not forloop.last %},{% endif %}{% endfor %}];
+      const rolesValores = [{% for r in roles %}{{ r.total|default:0 }}{% if not forloop.last %},{% endif %}{% endfor %}];
+
+      const resLabels = [{% for r in resultados %}"{{ r.resultado|escapejs }}"{% if not forloop.last %},{% endif %}{% endfor %}];
+      const resValores = [{% for r in resultados %}{{ r.total|default:0 }}{% if not forloop.last %},{% endif %}{% endfor %}];
+
+      if (rolCtx) {
+        new Chart(rolCtx, {
+          type: 'bar',
+          data: {
+            labels: rolesLabels,
+            datasets: [{
+              label: 'Accesos por Rol',
+              data: rolesValores,
+              backgroundColor: (ctx) => {
+                const chart = ctx.chart, ca = chart.chartArea, c = chart.ctx;
+                if (!ca) return 'rgba(34,211,238,.65)';
+                const g = c.createLinearGradient(0, ca.bottom, 0, ca.top);
+                g.addColorStop(0, 'rgba(34,211,238,.65)');
+                g.addColorStop(1, 'rgba(124,58,237,.70)');
+                return g;
+              },
+              borderColor: 'rgba(34,211,238,1)',
+              borderWidth: 1.5,
+              borderRadius: 10
+            }]
+          },
+          options: {
+            responsive: true, maintainAspectRatio: false,
+            animation: { duration: 700, easing: 'easeOutQuart' },
+            plugins: {
+              legend: { labels: { color: '#fff', font: { size: 11 } } },
+              tooltip: { backgroundColor: '#0f172a', titleColor: '#22d3ee', bodyColor: '#fff', borderColor: '#22d3ee', borderWidth: 1, padding: 10, bodyFont: { size: 11 } }
+            },
+            scales: {
+              x: { ticks: { color: '#e5e7eb', font: { size: 11 } }, grid: { color: '#334155' } },
+              y: { ticks: { color: '#e5e7eb', font: { size: 11 } }, grid: { color: '#334155' } }
+            }
+          }
+        });
+      }
+
+      if (resCtx) {
+        const colores = resLabels.map(l => {
+          const k = String(l).toLowerCase();
+          if (k.includes('permitido')) return '#22c55e';
+          if (k.includes('denegado')) return '#ef4444';
+          return '#f97316';
+        });
+        new Chart(resCtx, {
+          type: 'doughnut',
+          data: {
+            labels: resLabels,
+            datasets: [{
+              label: 'Resultados',
+              data: resValores,
+              backgroundColor: colores,
+              borderColor: '#111827',
+              borderWidth: 2,
+              hoverOffset: 6
+            }]
+          },
+          options: {
+            responsive: true, maintainAspectRatio: false, cutout: '62%',
+            animation: { duration: 800, easing: 'easeOutExpo' },
+            plugins: {
+              legend: { display: false },
+              tooltip: { backgroundColor: '#0f172a', titleColor: '#22d3ee', bodyColor: '#fff', borderColor: '#22d3ee', borderWidth: 1, padding: 10, bodyFont: { size: 11 } }
+            }
+          }
+        });
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', renderizarGraficos);
+    document.body.addEventListener('htmx:afterSwap', (e) => {
+      if (e.target && e.target.querySelector && e.target.querySelector('canvas')) renderizarGraficos();
+    });
+    document.body.addEventListener('actualizar-panel', () => {});
+  </script>
+
+  <script>
+  document.body.addEventListener('htmx:configRequest', (event) => {
+    const token = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+    if (token) {
+      event.detail.headers['X-CSRFToken'] = token;
+    }
+  });
+</script>
+
+</body>
+</html>

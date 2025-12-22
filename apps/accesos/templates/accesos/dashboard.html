@@ -1,0 +1,318 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard de Accesos</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" href="{% static 'img/favicon_qr.png' %}">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body class="bg-gray-950 text-white min-h-screen p-4 sm:p-6 md:p-8 font-sans">
+
+  <!-- Encabezado -->
+  <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 sm:mb-8 gap-3 sm:gap-4">
+    <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold text-cyan-400">📊 Dashboard de Accesos</h1>
+    <div class="relative">
+      <button id="btnNotificaciones" class="text-sm sm:text-base text-gray-300 relative px-3 py-2 sm:px-4 sm:py-2">
+        Accesos recientes
+        {% if alertas %}
+          <span class="absolute -top-2 -right-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full animate-pulse">
+            {{ alertas|length }}
+          </span>
+        {% endif %}
+      </button>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="flex flex-col md:flex-row gap-3 sm:gap-4 mb-6 sm:mb-8">
+    <select id="filtroRol" class="bg-gray-800 text-white p-2 sm:p-3 rounded text-sm sm:text-base w-full md:w-auto">
+      <option value="">Todos los roles</option>
+      <option value="admin">Administrador</option>
+      <option value="empleado">Empleado</option>
+      <option value="visitante">Visitante</option>
+    </select>
+    <select id="filtroResultado" class="bg-gray-800 text-white p-2 sm:p-3 rounded text-sm sm:text-base w-full md:w-auto">
+      <option value="">Todos los resultados</option>
+      <option value="permitido">Permitido</option>
+      <option value="denegado">Denegado</option>
+      <option value="fuera de horario">Fuera de horario</option>
+    </select>
+  </div>
+
+  <!-- Gráficos -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 mb-10 sm:mb-12">
+    <div class="bg-gray-900 p-4 sm:p-6 md:p-8 rounded-lg shadow-lg h-[340px] sm:h-[420px] md:h-[520px] relative">
+      <h2 class="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6">Accesos por Rol</h2>
+      <div class="absolute inset-0 top-16 sm:top-20 px-3 sm:px-4">
+        <canvas id="rolChart" class="w-full h-full"></canvas>
+      </div>
+    </div>
+
+    <div class="bg-gray-900 p-4 sm:p-6 md:p-8 rounded-lg shadow-lg h-[340px] sm:h-[420px] md:h-[520px] relative">
+      <h2 class="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6">Resultados de Acceso</h2>
+      <div class="absolute inset-0 top-20 sm:top-24 px-4 sm:px-6 pb-4 sm:pb-6">
+        <canvas id="resultadoChart" class="w-full h-[220px] sm:h-[280px] md:h-[320px]"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Últimos accesos -->
+  <div class="bg-gray-900 p-4 sm:p-6 md:p-8 rounded-lg shadow-lg">
+    <h2 class="text-lg sm:text-xl mb-4 sm:mb-6">Últimos Accesos</h2>
+    <ul class="space-y-4 sm:space-y-6">
+      {% for evento in eventos %}
+        <li data-rol="{{ evento.usuario.rol }}" data-resultado="{{ evento.resultado }}"
+            class="flex items-center gap-3 sm:gap-4 bg-gray-800 p-3 sm:p-4 rounded-lg hover:bg-gray-700 transition">
+          <img onclick="abrirModal('{{ evento.usuario.id }}', '{{ evento.usuario.username }}', '{{ evento.usuario.rol }}', '{{ evento.usuario.horario_inicio }}', '{{ evento.usuario.horario_fin }}')"
+               src="{% if evento.usuario and evento.usuario.avatar and evento.usuario.avatar.name %}{{ evento.usuario.avatar.url }}{% else %}{% static 'img/sin_avatar.png' %}{% endif %}"
+               class="h-10 w-10 sm:h-12 sm:w-12 rounded-full border object-cover cursor-pointer hover:scale-105 transition-transform"
+               alt="Avatar">
+          <div class="flex-1 min-w-0">
+            <div class="text-sm sm:text-base font-semibold text-white truncate">
+              {% if evento.usuario %}
+                {{ evento.usuario.username }}
+                <span class="text-xs sm:text-sm text-gray-400 ml-2">({{ evento.usuario.rol }})</span>
+              {% else %}
+                Usuario desconocido
+              {% endif %}
+            </div>
+            <div class="text-xs sm:text-sm text-gray-400">
+              {{ evento.fecha|date:"d M H:i:s" }} —
+              {% if evento.resultado == 'permitido' %}
+                <span class="font-bold text-green-400">Permitido</span>
+              {% elif evento.resultado == 'fuera de horario' %}
+                <span class="font-bold text-orange-400">Fuera de horario</span>
+              {% elif evento.resultado == 'denegado' %}
+                <span class="font-bold text-red-400">Denegado</span>
+              {% else %}
+                <span class="font-bold text-yellow-400">{{ evento.resultado|capfirst }}</span>
+              {% endif %}
+            </div>
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  <!-- Modal editable -->
+  <div id="modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-gray-900 p-6 sm:p-8 rounded-lg w-full max-w-md mx-auto text-white max-h-[90vh] overflow-y-auto">
+      <h2 class="text-lg sm:text-xl font-bold mb-4">Editar Perfil</h2>
+      <input type="hidden" id="modal-id">
+      <label class="text-xs sm:text-sm">Nombre:</label>
+      <input id="modal-username" class="w-full bg-gray-800 text-white p-2 rounded mb-2">
+      <label class="text-xs sm:text-sm">Rol:</label>
+      <select id="modal-rol" class="w-full bg-gray-800 text-white p-2 rounded mb-2">
+        <option value="admin">Administrador</option>
+        <option value="empleado">Empleado</option>
+        <option value="visitante">Visitante</option>
+      </select>
+      <label class="text-xs sm:text-sm">Horario inicio:</label>
+      <input id="modal-inicio" type="time" class="w-full bg-gray-800 text-white p-2 rounded mb-2">
+      <label class="text-xs sm:text-sm">Horario fin:</label>
+      <input id="modal-fin" type="time" class="w-full bg-gray-800 text-white p-2 rounded mb-4">
+      <div class="flex justify-end gap-2">
+        <button onclick="guardarPerfil()" class="bg-cyan-500 px-4 py-2 rounded">Guardar</button>
+        <button onclick="cerrarModal()" class="bg-gray-700 px-4 py-2 rounded">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Panel de notificaciones -->
+  <div id="panelNotificaciones" class="fixed top-0 right-0 w-full sm:max-w-md h-full bg-gray-900 shadow-lg p-6 sm:p-8 overflow-y-auto hidden z-50">
+    <h2 class="text-lg sm:text-xl font-bold text-white mb-4">🔔 Accesos Críticos</h2>
+    {% if alertas %}
+      <ul class="space-y-3 sm:space-y-4">
+        {% for alerta in alertas %}
+          <li class="bg-gray-800 p-3 sm:p-4 rounded-lg text-xs sm:text-sm">
+            <div class="font-semibold text-white">
+              {% if alerta.usuario %}
+                {{ alerta.usuario.username }}
+                <span class="text-[11px] sm:text-xs text-gray-400 ml-2">({{ alerta.usuario.rol|default:"Desconocido" }})</span>
+              {% else %}
+                Usuario desconocido
+              {% endif %}
+            </div>
+            <div class="text-[11px] sm:text-xs text-gray-400">
+              {{ alerta.fecha|date:"d M H:i:s" }} —
+              {% if alerta.resultado == 'denegado' %}
+                <span class="font-bold text-red-400">Denegado</span>
+              {% elif alerta.resultado == 'fuera de horario' %}
+                <span class="font-bold text-orange-400">Fuera de horario</span>
+              {% endif %}
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="text-gray-400 text-xs sm:text-sm">No hay accesos críticos recientes.</p>
+    {% endif %}
+    <button onclick="cerrarNotificaciones()" class="mt-6 bg-cyan-500 px-4 py-2 rounded text-white w-full">Cerrar</button>
+  </div>
+
+  <!-- Scripts -->
+  <script>
+    // Notificaciones
+    document.getElementById('btnNotificaciones').addEventListener('click', function () {
+      document.getElementById('panelNotificaciones').classList.remove('hidden');
+    });
+
+    function cerrarNotificaciones() {
+      document.getElementById('panelNotificaciones').classList.add('hidden');
+    }
+
+    function abrirModal(id, username, rol, inicio, fin) {
+      document.getElementById('modal-id').value = id;
+      document.getElementById('modal-username').value = username;
+      document.getElementById('modal-rol').value = rol;
+      document.getElementById('modal-inicio').value = inicio;
+      document.getElementById('modal-fin').value = fin;
+      document.getElementById('modal').classList.remove('hidden');
+    }
+
+    function cerrarModal() {
+      document.getElementById('modal').classList.add('hidden');
+    }
+
+    function guardarPerfil() {
+      const data = new FormData();
+      data.append('id', document.getElementById('modal-id').value);
+      data.append('username', document.getElementById('modal-username').value);
+      data.append('rol', document.getElementById('modal-rol').value);
+      data.append('horario_inicio', document.getElementById('modal-inicio').value);
+      data.append('horario_fin', document.getElementById('modal-fin').value);
+
+      fetch('/usuarios/actualizar-perfil/', {
+        method: 'POST',
+        body: data
+      })
+      .then(res => res.json())
+      .then(json => {
+        if (json.status === 'ok') {
+          cerrarModal();
+          location.reload();
+        } else {
+          alert('Error: ' + json.message);
+        }
+      });
+    }
+
+    // Filtros dinámicos
+    document.getElementById('filtroRol').addEventListener('change', filtrarAccesos);
+    document.getElementById('filtroResultado').addEventListener('change', filtrarAccesos);
+
+    function filtrarAccesos() {
+      const rol = document.getElementById('filtroRol').value;
+      const resultado = document.getElementById('filtroResultado').value;
+      document.querySelectorAll('li[data-rol]').forEach(el => {
+        const coincideRol = !rol || el.dataset.rol === rol;
+        const coincideResultado = !resultado || el.dataset.resultado === resultado;
+        el.style.display = (coincideRol && coincideResultado) ? 'flex' : 'none';
+      });
+    }
+
+    // Renderizar gráficos Chart.js
+    window.addEventListener('load', function () {
+      const rolLabels = [{% for r in roles %}'{{ r.rol_nombre }}'{% if not forloop.last %},{% endif %}{% endfor %}];
+      const rolData = [{% for r in roles %}{{ r.total }}{% if not forloop.last %},{% endif %}{% endfor %}];
+
+      const resultadoLabels = [{% for r in resultados %}'{{ r.resultado }}'{% if not forloop.last %},{% endif %}{% endfor %}];
+      const resultadoData = [{% for r in resultados %}{{ r.total }}{% if not forloop.last %},{% endif %}{% endfor %}];
+
+      const resultadoColors = resultadoLabels.map(label => {
+        if (label === 'permitido') return '#22c55e';
+        if (label === 'denegado') return '#ef4444';
+        if (label === 'fuera de horario') return '#f97316';
+        return '#eab308';
+      });
+
+      const chartOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            labels: { color: '#fff', font: { size: 14 } }
+          },
+          tooltip: {
+            backgroundColor: '#1f2937',
+            titleColor: '#00ffff',
+            bodyColor: '#fff',
+            borderColor: '#00ffff',
+            borderWidth: 1
+          }
+        },
+        scales: {
+          x: { ticks: { color: '#fff' }, grid: { color: '#334155' } },
+          y: {
+            ticks: {
+              color: '#fff',
+              callback: value => Number.isInteger(value) ? value : ''
+            },
+            grid: { color: '#334155' }
+          }
+        }
+      };
+
+      const ctxRol = document.getElementById('rolChart').getContext('2d');
+      new Chart(ctxRol, {
+        type: 'bar',
+        data: {
+          labels: rolLabels,
+          datasets: [{
+            label: 'Accesos por Rol',
+            data: rolData,
+            backgroundColor: 'rgba(0, 255, 255, 0.5)',
+            borderColor: 'rgba(0, 255, 255, 1)',
+            borderWidth: 1
+          }]
+        },
+        options: chartOptions
+      });
+
+      const ctxResultado = document.getElementById('resultadoChart').getContext('2d');
+      new Chart(ctxResultado, {
+        type: 'pie',
+        data: {
+          labels: resultadoLabels,
+          datasets: [{
+            label: 'Resultados',
+            data: resultadoData,
+            backgroundColor: resultadoColors,
+            borderColor: '#fff',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: chartOptions.plugins
+        }
+      });
+    });
+
+    // Cierre con Escape
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        cerrarModal();
+        cerrarNotificaciones();
+      }
+    });
+
+    // Ocultar perfil-box al hacer clic fuera (si existe)
+    document.addEventListener('click', function (e) {
+      const perfilBox = document.getElementById('perfil-box');
+      if (!perfilBox) return;
+      if (!perfilBox.contains(e.target)) {
+        perfilBox.style.display = 'none';
+      }
+    });
+  </script>
+</body>
+</html>

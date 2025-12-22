@@ -1,0 +1,176 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>✅ Acceso restaurado — Acceso Cuántico</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="color-scheme" content="dark" />
+  <meta name="theme-color" content="#05080f" />
+  <link rel="icon" type="image/png" href="{% static 'img/favicon_qr.png' %}">
+  <link href="{% static 'css/output.css' %}" rel="stylesheet" />
+
+  <style>
+    :root{
+      --bg0:#000000; --bg1:#05080f;
+      --glass: rgba(10,20,30,0.82);
+      --cyan:#22d3ee; --blue:#2563eb; --purple:#7c3aed; --pink:#ec4899;
+      --text:#e6f6ff; --muted:#cfd8dc;
+      --border: rgba(34,211,238,.35);
+      --success:#00ffcc;
+    }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      font-family: "Share Tech Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      background: radial-gradient(1200px 800px at 15% 20%, var(--bg1) 0%, var(--bg0) 70%);
+      color: var(--text);
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Fondo orbital */
+    .scene { position: fixed; inset: 0; pointer-events: none; z-index: -10; }
+    .stars { position: absolute; inset: 0; background: transparent url('{% static "img/stars.png" %}') repeat; animation: moveStars 180s linear infinite; opacity: .35; }
+    @keyframes moveStars { from { background-position: 0 0; } to { background-position: -9000px 4500px; } }
+    .nebula {
+      position: absolute; inset: 0; pointer-events: none;
+      background:
+        radial-gradient(1200px 800px at 85% 20%, rgba(124,58,237,.20), transparent 55%),
+        radial-gradient(900px 600px at 15% 80%, rgba(34,211,238,.18), transparent 55%);
+      mix-blend-mode: screen; opacity: .35; filter: blur(6px);
+    }
+
+    /* Vista principal */
+    .viewport {
+      min-height: 100dvh;
+      display: grid;
+      place-items: center;
+      position: relative;
+      z-index: 10;
+      padding: 6vh 0;
+    }
+
+    /* Tarjeta orbital potente */
+    .card {
+      position: relative;
+      width: min(640px, 94vw);
+      border-radius: 22px;
+      background: var(--glass);
+      backdrop-filter: blur(22px) saturate(1.08);
+      border: 1.8px solid var(--border);
+      box-shadow: 0 10px 38px rgba(0,0,0,.55), inset 0 0 26px rgba(34,211,238,.08);
+      padding: clamp(18px, 4.6vh, 32px);
+      display: grid;
+      grid-template-rows: auto auto auto auto;
+      row-gap: clamp(12px, 2.6vh, 22px);
+      overflow: hidden;
+      transform-style: preserve-3d;
+    }
+
+    /* Borde holográfico animado con máscara */
+    .card::before{
+      content:"";
+      position:absolute; inset:-2px; border-radius:24px; padding:2px; opacity:.66;
+      background: conic-gradient(from 180deg at 50% 50%, rgba(34,211,238,.55), rgba(37,99,235,.45), rgba(124,58,237,.55), rgba(236,72,153,.48), rgba(34,211,238,.55));
+      animation: hue 18s linear infinite;
+      mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      mask-composite: exclude;
+      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor;
+      pointer-events:none;
+    }
+    @keyframes hue { 0%{ filter:hue-rotate(0deg)} 100%{filter:hue-rotate(360deg)} }
+
+    /* Sello icónico */
+    .lock {
+      display: grid; place-items:center;
+      width: clamp(72px, 12vh, 120px); height: clamp(72px, 12vh, 120px);
+      margin: 0 auto; border-radius: 50%;
+      background: radial-gradient(closest-side, rgba(34,211,238,.24), rgba(124,58,237,.28));
+      box-shadow: 0 0 36px rgba(124,58,237,.35), 0 0 22px rgba(34,211,238,.28) inset;
+      position: relative;
+      transform: translateZ(16px);
+    }
+    .lock::after{ content:"✅"; font-size: clamp(1.4rem, 4.2vh, 2rem); text-shadow: 0 0 10px rgba(34,211,238,.6); }
+    .ring { position:absolute; inset:-5px; border-radius:50%; border: 2px dashed rgba(34,211,238,.45); animation: spin 16s linear infinite; }
+    @keyframes spin { from{transform:rotate(0)} to{transform:rotate(360deg)} }
+
+    /* Título con brillo */
+    .title {
+      text-align:center; font-weight: 900; letter-spacing:.10em; text-transform: uppercase;
+      font-size: clamp(1.25rem, 5vh, 2.2rem);
+      background: linear-gradient(90deg, var(--cyan), var(--blue), var(--purple));
+      -webkit-background-clip:text; background-clip:text; color: transparent;
+      text-shadow: 0 0 16px rgba(34,211,238,.28);
+      margin: 0;
+    }
+
+    /* Mensaje principal OK */
+    .ok {
+      text-align:center;
+      font-size: clamp(.95rem, 2.6vh, 1.1rem);
+      color: var(--success);
+      font-weight: 800;
+      letter-spacing: .03em;
+      text-shadow: 0 0 12px rgba(0,255,204,.35);
+      margin: 0;
+    }
+
+    /* Centrado del botón de acción */
+    .form-actions {
+      display: flex;
+      justify-content: center;   /* centra horizontalmente el botón */
+      align-items: center;
+      margin-top: clamp(10px, 2vh, 16px);
+    }
+
+    /* Botón */
+    .btn {
+      display:inline-flex; align-items:center; justify-content:center;
+      width: 100%; max-width: 420px;
+      padding: clamp(12px, 2.6vh, 18px);
+      font-size: clamp(1rem, 2.4vh, 1.12rem);
+      font-weight: 800; letter-spacing: .06em; text-transform: uppercase;
+      border: 0; border-radius: 14px; color: #fff; cursor: pointer;
+      background: linear-gradient(90deg, var(--cyan), var(--blue), var(--purple), var(--pink), var(--cyan));
+      background-size: 260% 260%;
+      box-shadow: 0 10px 22px rgba(37,99,235,.25), 0 0 22px rgba(34,211,238,.35);
+      transition: transform .18s ease, box-shadow .18s ease, opacity .18s ease, filter .18s ease;
+      margin: 0 auto; /* asegura centrado si el contenedor no es flex */
+    }
+    .btn:hover { transform: translateY(-1px) scale(1.015); box-shadow: 0 12px 26px rgba(37,99,235,.35), 0 0 28px rgba(34,211,238,.45); filter: saturate(1.08); }
+    .btn:active { transform: translateY(0) scale(.995); }
+
+    @media (prefers-reduced-motion: reduce){
+      .stars, .ring { animation: none !important; }
+      .card::before { animation: none !important; }
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+  </style>
+</head>
+<body>
+  <!-- Fondo orbital -->
+  <div class="scene" aria-hidden="true">
+    <div class="stars"></div>
+    <div class="nebula"></div>
+  </div>
+
+  <!-- Vista centrada -->
+  <div class="viewport">
+    <section class="card" role="region" aria-labelledby="titulo-restaurado">
+      <div class="lock"><div class="ring"></div></div>
+      <h1 id="titulo-restaurado" class="title">Acceso restaurado</h1>
+      <p class="ok">✅ Tu contraseña ha sido restablecida correctamente.</p>
+
+      <form method="get" action="{% url 'usuarios:login' %}" class="form-actions">
+        <button class="btn" type="submit" aria-label="Iniciar sesión">🔑 Iniciar sesión</button>
+      </form>
+    </section>
+  </div>
+</body>
+</html>

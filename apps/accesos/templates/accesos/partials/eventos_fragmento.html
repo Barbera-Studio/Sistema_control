@@ -1,0 +1,70 @@
+{% load static %}
+
+<h2 class="text-2xl font-bold text-red-600 mb-6 tracking-wide border-b border-red-800 pb-2">
+  🔥 Accesos Críticos
+</h2>
+
+{% if alertas %}
+  <ul id="lista-alertas">
+    {% for alerta in alertas %}
+      <li id="alerta-{{ alerta.id }}" class="p-5 rounded-xl bg-gray-900 border border-red-700 shadow-md">
+        <div class="flex justify-between">
+          <span class="text-white font-semibold">
+            {% if alerta.usuario %}{{ alerta.usuario.username }}{% else %}Usuario desconocido{% endif %}
+          </span>
+          <time class="text-gray-300 text-sm">{{ alerta.fecha|date:"d M Y · H:i:s" }}</time>
+        </div>
+
+        <div class="mt-2 text-red-400 font-bold">🚫 Denegado</div>
+        <div class="mt-2 text-xs text-gray-400">ID: {{ alerta.id }}</div>
+
+        {% if not alerta.visto %}
+          <form
+            method="post"
+            action="{% url 'accesos:marcar_evento_visto' alerta.id %}"
+            hx-post="{% url 'accesos:marcar_evento_visto' alerta.id %}"
+            hx-target="closest li"         
+            hx-swap="outerHTML"         
+            hx-on="htmx:afterRequest: document.body.dispatchEvent(new Event('actualizar-panel'))"
+            class="inline">
+            {% csrf_token %}
+            <button type="submit"
+                    class="px-3 py-1 bg-green-700 hover:bg-green-600 text-white text-xs font-bold rounded-lg shadow-sm transition">
+              ✅ Marcar como visto
+            </button>
+          </form>
+        {% endif %}
+      </li>
+    {% endfor %}
+  </ul>
+{% else %}
+  <div class="text-center text-gray-400 italic text-sm mt-6" id="no-alertas">
+    No hay accesos críticos recientes.
+  </div>
+{% endif %}
+
+<button onclick="cerrarNotificaciones()"
+        class="mt-8 w-full py-3 bg-red-700 hover:bg-red-600 text-white font-bold rounded-xl shadow-md transition">
+  🔒 Cerrar Panel
+</button>
+
+<script src="{% static 'js/htmx.min.js' %}"></script>
+<script>
+  // CSRF para cualquier hx-post fuera de forms (defensivo)
+  document.body.addEventListener('htmx:configRequest', (event) => {
+    const token = document.querySelector('input[name=csrfmiddlewaretoken]')?.value;
+    if (token) event.detail.headers['X-CSRFToken'] = token;
+  });
+
+  // Si la lista queda vacía, muestra mensaje
+  document.body.addEventListener('htmx:afterSwap', () => {
+    const ul = document.getElementById('lista-alertas');
+    if (ul && ul.children.length === 0) {
+      const empty = document.createElement('div');
+      empty.id = 'no-alertas';
+      empty.className = 'text-center text-gray-400 italic text-sm mt-6';
+      empty.textContent = 'No hay accesos críticos recientes.';
+      ul.replaceWith(empty);
+    }
+  });
+</script>

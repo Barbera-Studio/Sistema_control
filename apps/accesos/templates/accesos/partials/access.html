@@ -1,0 +1,24 @@
+<div class="mt-6 flex flex-col items-center">
+    <!-- Avatar del usuario -->
+    <img src="{{ usuario.avatar.url|default:'/media/avatars/default.png' }}" alt="Avatar"
+         class="w-20 h-20 rounded-full border-4 border-green-400 mb-4 shadow-lg" />
+
+    <!-- Animación de puerta -->
+    <div class="relative w-40 h-20 overflow-hidden mb-4">
+        <div class="absolute left-0 top-0 w-1/2 h-full bg-green-600 door-left"></div>
+        <div class="absolute right-0 top-0 w-1/2 h-full bg-green-600 door-right"></div>
+    </div>
+
+    <!-- Mensaje de acceso -->
+    <p class="text-green-400 text-xl font-bold">✅ Acceso permitido</p>
+</div>
+
+<style>
+@keyframes doorOpen {
+    0% { transform: scaleX(1); }
+    100% { transform: scaleX(0); }
+}
+.door-left, .door-right {
+    animation: doorOpen 1s ease-in-out forwards;
+}
+</style>

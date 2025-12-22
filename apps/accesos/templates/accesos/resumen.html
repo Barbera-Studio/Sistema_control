@@ -1,0 +1,18 @@
+<table class="table-auto w-full text-left text-white">
+    <thead>
+        <tr>
+            <th>Usuario</th>
+            <th>Resultado</th>
+            <th>Total</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for r in resumen %}
+        <tr>
+            <td>{{ r.usuario__username }}</td>
+            <td>{{ r.resultado }}</td>
+            <td>{{ r.total }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
