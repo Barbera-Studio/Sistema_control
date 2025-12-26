@@ -20,3 +20,6 @@ psycopg2-binary==2.9.10
 
 # Optional utilities
 requests==2.32.3
+
+djangorestframework==3.16.1
+django-filter==25.1
