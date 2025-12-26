@@ -1,8 +1,22 @@
+# Django core
 Django==5.0.6
+sqlparse==0.5.3
+
+# WSGI server
 gunicorn==23.0.0
+
+# Static files
 whitenoise==6.6.0
+
+# Admin interface enhancements
+django-admin-interface==0.28.6
+django-colorfield==0.11.0
+
+# Environment variables (optional but recommended)
 django-environ==0.12.0
-djangorestframework==3.16.1
-django-filter==25.1
-django-widget-tweaks==1.5.0
+
+# Database (SQLite works by default, but psycopg2 is harmless if you migrate later)
 psycopg2-binary==2.9.10
+
+# Optional utilities
+requests==2.32.3
