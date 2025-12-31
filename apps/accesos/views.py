@@ -71,10 +71,13 @@ from apps.accesos.models import EventoAcceso
 
 # 📊 Dashboard de accesos
 def dashboard_accesos(request):
-    # 🕒 Últimos 50 eventos
-    eventos = EventoAcceso.objects.select_related('usuario').order_by('-fecha')[:50]
 
-    # 🧑‍🚀 Distribución por rol
+    # 🕒 Últimos 50 eventos SOLO del usuario actual
+    eventos = EventoAcceso.objects.filter(
+        usuario=request.user
+    ).select_related('usuario').order_by('-fecha')[:50]
+
+    # 🧑‍🚀 Distribución por rol (GLOBAL)
     roles_raw = EventoAcceso.objects.annotate(
         rol_nombre=Coalesce('usuario__rol', Value('Desconocido'))
     ).values('rol_nombre').annotate(total=Count('id'))
@@ -90,7 +93,7 @@ def dashboard_accesos(request):
         for i, r in enumerate(roles_raw)
     ]
 
-    # 🚦 Distribución por resultado
+    # 🚦 Distribución por resultado (GLOBAL)
     resultados_raw = EventoAcceso.objects.values('resultado').annotate(total=Count('id'))
 
     resultados = [
@@ -104,9 +107,10 @@ def dashboard_accesos(request):
         for i, r in enumerate(resultados_raw)
     ]
 
-    # 🔔 Últimas alertas críticas
+    # 🔔 Últimas alertas críticas SOLO del usuario actual
     hace_24_horas = timezone.now() - timedelta(hours=24)
     alertas = EventoAcceso.objects.filter(
+        usuario=request.user,
         resultado__in=['denegado', 'fuera de horario'],
         fecha__gte=hace_24_horas
     ).select_related('usuario').order_by('-fecha')[:5]
@@ -123,16 +127,25 @@ def dashboard_accesos(request):
 
 # 📜 Eventos recientes (auto-refresh con HTMX)
 def eventos_recientes(request):
-    alertas = EventoAcceso.objects.filter(visto=False)[:50]  # solo no vistos
+    # ❗ Debe filtrar por usuario
+    alertas = EventoAcceso.objects.filter(
+        usuario=request.user,
+        visto=False
+    ).order_by('-fecha')[:50]
+
     return render(request, "accesos/partials/eventos_fragmento.html", {"alertas": alertas})
 
 
+# 🔢 Contador de alertas (badge rojo)
 def contador_alertas(request):
     hace_24_horas = timezone.now() - timedelta(hours=24)
+
+    # ❗ Debe filtrar por usuario
     total = EventoAcceso.objects.filter(
+        usuario=request.user,
         resultado__in=['denegado', 'fuera de horario'],
         fecha__gte=hace_24_horas,
-        visto=False                
+        visto=False
     ).count()
 
     if total > 0:
@@ -145,15 +158,26 @@ def contador_alertas(request):
         return HttpResponse(html)
     else:
         return HttpResponse("")
-    
 
+
+# 📚 Historial de eventos (modal o pestaña)
 def eventos_historial(request):
-    eventos = EventoAcceso.objects.select_related('usuario').order_by('-fecha')[:50]
+    # ❗ Debe filtrar por usuario
+    eventos = EventoAcceso.objects.filter(
+        usuario=request.user
+    ).select_related('usuario').order_by('-fecha')[:50]
+
     return render(request, 'accesos/partials/eventos_historial.html', {'eventos': eventos})
 
-# 🧾 Resumen por usuario
+
+# 🧾 Resumen por usuario (GLOBAL)
 def resumen_por_usuario(request):
-    resumen = EventoAcceso.objects.values('usuario__username', 'resultado').annotate(total=Count('id'))
+    # ❗ Esto debe seguir siendo global (es un informe administrativo)
+    resumen = EventoAcceso.objects.values(
+        'usuario__username',
+        'resultado'
+    ).annotate(total=Count('id'))
+
     return render(request, 'accesos/resumen.html', {'resumen': resumen})
 
 
