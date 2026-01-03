@@ -14,9 +14,8 @@ from django.shortcuts import redirect
 # Si el usuario NO está autenticado → Login
 # Si está autenticado → Dashboard
 def root_redirect(request):
-    if request.user.is_authenticated:
-        return redirect("accesos:dashboard")
     return redirect("usuarios:login")
+
 
 
 urlpatterns = [

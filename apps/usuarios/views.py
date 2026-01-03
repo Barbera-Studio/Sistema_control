@@ -53,25 +53,27 @@ def actualizar_perfil(request):
 
 
 def login_view(request):
+
+    # Si ya está autenticado → ir directo al dashboard
+    if request.user.is_authenticated:
+        return redirect('/accesos/dashboard/')
+
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
         user = authenticate(request, username=username, password=password)
         if user:
             login(request, user)
-            return redirect('accesos:dashboard_accesos')
+            return redirect('/accesos/dashboard/')
         else:
             error = "Credenciales inválidas"
     else:
         error = None
 
-    # Si la petición viene de HTMX → devolver solo el fragmento
     if request.headers.get('HX-Request') == 'true':
         return render(request, 'usuarios/partials/login_form.html', {'error': error})
 
-    # Si es navegación normal → devolver la página completa
     return render(request, 'usuarios/login.html', {'error': error, 'rango': range(20)})
-
 
 
 def dashboard_view(request):

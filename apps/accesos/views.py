@@ -180,6 +180,13 @@ def resumen_por_usuario(request):
 
     return render(request, 'accesos/resumen.html', {'resumen': resumen})
 
+# 🌐 Página pública informativa de Acceso Cuántico 
+def info_acceso_cuantico(request):
+    """
+    Página pública futurista que explica el sistema,
+    el concepto de Acceso Cuántico y cómo entrar como visitante.
+    """
+    return render(request, "accesos/info_acceso_cuantico.html")
 
 # 📷 Validación con QR
 @csrf_exempt

@@ -19,6 +19,7 @@ urlpatterns = [
     path('alertas/contador/', contador_alertas, name='contador_alertas'),
     path('perfil/panel/', panel_perfil, name='panel_perfil'),
     path("evento/<int:evento_id>/visto/", views.marcar_evento_visto, name="marcar_evento_visto"),
+    path("info/", views.info_acceso_cuantico, name="info_acceso_cuantico"),
 ]
 
 if settings.DEBUG:

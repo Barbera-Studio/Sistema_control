@@ -1,0 +1,1128 @@
+<!-- apps/accesos/templates/accesos/info_acceso_cuantico.html -->
+
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Acceso Cuántico — Información del sistema</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- TailwindCSS (para footer y utilidades ligeras) -->
+    <link rel="stylesheet" href="{% static 'css/tailwind.css' %}">
+
+    <!-- Fuente principal -->
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=space-grotesk:400,500,600,700" rel="stylesheet" />
+
+    <style>
+        :root {
+            --bg-main: #020617;
+            --bg-surface: #020817;
+            --bg-card: rgba(15, 23, 42, 0.97);
+            --bg-card-soft: rgba(15, 23, 42, 0.90);
+            --border-soft: rgba(148, 163, 184, 0.4);
+            --border-strong: rgba(56, 189, 248, 0.65);
+            --text-main: #e5e7eb;
+            --text-soft: #9ca3af;
+            --text-muted: #6b7280;
+            --accent-cyan: #22d3ee;
+            --accent-blue: #3b82f6;
+            --accent-purple: #a855f7;
+            --accent-emerald: #22c55e;
+            --radius-xl: 1.75rem;
+            --radius-lg: 1.25rem;
+            --shadow-soft: 0 18px 48px rgba(15, 23, 42, 0.95);
+            --shadow-subtle: 0 10px 30px rgba(15, 23, 42, 0.9);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            min-height: 100vh;
+            font-family: 'Space Grotesk', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-main);
+            color: var(--text-main);
+            overflow-x: hidden;
+        }
+
+        .page {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            z-index: 0;
+        }
+
+        /* CANVAS DE FONDO CUÁNTICO */
+        .quantum-background {
+            position: fixed;
+            inset: 0;
+            z-index: -2;
+            background: radial-gradient(circle at 0% 0%, rgba(56,189,248,0.28) 0%, transparent 50%),
+                        radial-gradient(circle at 100% 100%, rgba(168,85,247,0.25) 0%, transparent 55%),
+                        radial-gradient(circle at 50% 50%, #020617 0%, #000 70%);
+        }
+
+        #quantumCanvas {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .quantum-overlay {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: -1;
+            background-image:
+                linear-gradient(rgba(15,23,42,0.75), rgba(15,23,42,0.95)),
+                linear-gradient(to right, rgba(15,23,42,0.85) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(15,23,42,0.85) 1px, transparent 1px);
+            background-size: auto, 80px 1px, 1px 80px;
+            mix-blend-mode: soft-light;
+        }
+
+        /* WRAPPER GLOBAL */
+        .wrapper {
+            width: 100%;
+            max-width: 1160px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+        }
+
+        @media (min-width: 1200px) {
+            .wrapper {
+                max-width: 1180px;
+            }
+        }
+
+        /* HEADER */
+
+        .header {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            backdrop-filter: blur(18px);
+            background: linear-gradient(to bottom, rgba(15,23,42,0.96), rgba(15,23,42,0.92));
+            border-bottom: 1px solid rgba(15,23,42,0.95);
+        }
+
+        .header-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 0;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+        }
+
+        .brand-logo {
+            height: 2.5rem;
+            width: 2.5rem;
+            border-radius: 999px;
+            background:
+                radial-gradient(circle at 30% 0%, #22d3ee 0%, #22d3ee 13%, transparent 60%),
+                radial-gradient(circle at 70% 100%, #a855f7 0%, #a855f7 10%, transparent 55%),
+                linear-gradient(135deg, #22d3ee, #3b82f6, #a855f7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow:
+                0 0 0 1px rgba(15,23,42,0.85),
+                0 14px 30px rgba(15,23,42,0.9),
+                0 0 32px rgba(56,189,248,0.55);
+        }
+
+        .brand-logo span {
+            color: #020617;
+            font-weight: 800;
+            font-size: 1.35rem;
+        }
+
+        .brand-text {
+            display: flex;
+            flex-direction: column;
+            gap: 0.18rem;
+        }
+
+        .brand-title {
+            font-size: 0.8rem;
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+            color: rgba(94,234,212,0.92);
+        }
+
+        .brand-subtitle {
+            font-size: 0.78rem;
+            color: var(--text-soft);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+        }
+
+        .header-pill {
+            display: none;
+            align-items: center;
+            gap: 0.5rem;
+            border-radius: 999px;
+            padding: 0.35rem 0.9rem;
+            border: 1px solid rgba(55,65,81,0.85);
+            font-size: 0.72rem;
+            color: var(--text-soft);
+        }
+
+        .header-pill-dot {
+            height: 0.45rem;
+            width: 0.45rem;
+            border-radius: 999px;
+            background: var(--accent-emerald);
+            box-shadow: 0 0 12px rgba(16,185,129,0.9);
+        }
+
+        .btn-small-outline {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.45rem 1.3rem;
+            border-radius: 999px;
+            border: 1px solid rgba(148,163,184,0.8);
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--text-main);
+            background: transparent;
+            text-decoration: none;
+            transition: background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+        }
+
+        .btn-small-outline:hover {
+            background: rgba(15,23,42,0.95);
+            border-color: rgba(249,250,251,0.95);
+            box-shadow:
+                0 12px 28px rgba(15,23,42,0.9),
+                0 0 18px rgba(56,189,248,0.65);
+            transform: translateY(-1px);
+        }
+
+        @media (min-width: 768px) {
+            .header-pill {
+                display: inline-flex;
+            }
+        }
+
+        /* HERO */
+
+        .hero {
+            padding: 3.75rem 0 3rem;
+        }
+
+        .hero-grid {
+            display: grid;
+            grid-template-columns: minmax(0,1fr);
+            gap: 2.75rem;
+            align-items: center;
+        }
+
+        @media (min-width: 900px) {
+            .hero-grid {
+                grid-template-columns: minmax(0,1.35fr) minmax(0,1fr);
+                gap: 3.25rem;
+            }
+        }
+
+        .hero-tagline {
+            font-size: 0.75rem;
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+            color: rgba(165,243,252,0.9);
+            margin-bottom: 0.9rem;
+        }
+
+        .hero-title {
+            font-size: 2.1rem;
+            line-height: 1.15;
+            font-weight: 700;
+            margin: 0 0 1.35rem;
+        }
+
+        @media (min-width: 640px) {
+            .hero-title {
+                font-size: 2.5rem;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .hero-title {
+                font-size: 3rem;
+            }
+        }
+
+        .hero-title span.accent {
+            color: var(--accent-cyan);
+        }
+
+        .hero-lead {
+            font-size: 0.98rem;
+            line-height: 1.7;
+            color: var(--text-soft);
+            max-width: 36rem;
+            margin-bottom: 2rem;
+        }
+
+        .hero-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .hero-cta-note {
+            font-size: 0.8rem;
+            color: var(--text-soft);
+            max-width: 32rem;
+        }
+
+        .hero-meta-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.75rem;
+            margin-top: 0.6rem;
+        }
+
+        .hero-meta-block {
+            min-width: 9.5rem;
+        }
+
+        .hero-meta-label {
+            font-size: 0.72rem;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 0.3rem;
+        }
+
+        .hero-meta-value {
+            font-size: 0.92rem;
+            color: var(--text-main);
+        }
+
+        .hero-card {
+            background: var(--bg-card);
+            border-radius: var(--radius-xl);
+            border: 1px solid var(--border-soft);
+            padding: 1.9rem 2rem;
+            box-shadow: var(--shadow-soft);
+        }
+
+        @media (max-width: 480px) {
+            .hero-card {
+                padding: 1.6rem 1.5rem;
+            }
+        }
+
+        .hero-card-label {
+            font-size: 0.75rem;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: rgba(148,163,184,0.9);
+            margin-bottom: 0.5rem;
+        }
+
+        .hero-card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.85rem;
+        }
+
+        .hero-card-text {
+            font-size: 0.9rem;
+            color: var(--text-soft);
+            line-height: 1.7;
+        }
+
+        /* SECCIONES BASE */
+
+        .section {
+            padding: 2.9rem 0;
+        }
+
+        .section-header {
+            margin-bottom: 2rem;
+            max-width: 40rem;
+        }
+
+        .section-title {
+            font-size: 1.35rem;
+            font-weight: 600;
+            margin: 0 0 0.65rem;
+        }
+
+        .section-subtitle {
+            font-size: 0.95rem;
+            color: var(--text-soft);
+            line-height: 1.7;
+        }
+
+        /* GRID 2 COL */
+
+        .grid-two {
+            display: grid;
+            grid-template-columns: minmax(0,1fr);
+            gap: 1.9rem;
+        }
+
+        @media (min-width: 900px) {
+            .grid-two {
+                grid-template-columns: minmax(0,1.05fr) minmax(0,1.05fr);
+                gap: 2.4rem;
+            }
+        }
+
+        .card-soft {
+            background: var(--bg-card-soft);
+            border-radius: var(--radius-xl);
+            border: 1px solid var(--border-soft);
+            padding: 1.9rem 2rem;
+            box-shadow: var(--shadow-subtle);
+        }
+
+        @media (max-width: 480px) {
+            .card-soft {
+                padding: 1.5rem 1.5rem;
+                border-radius: 1.3rem;
+            }
+        }
+
+        .card-soft-title {
+            font-size: 1.05rem;
+            font-weight: 600;
+            margin: 0 0 0.9rem;
+        }
+
+        .card-soft-text {
+            font-size: 0.95rem;
+            color: var(--text-soft);
+            margin: 0 0 0.9rem;
+            line-height: 1.7;
+        }
+
+        .card-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .card-list li {
+            position: relative;
+            padding-left: 1.2rem;
+            font-size: 0.95rem;
+            color: var(--text-main);
+            margin-bottom: 0.65rem;
+        }
+
+        .card-list li::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0.55rem;
+            height: 0.35rem;
+            width: 0.35rem;
+            border-radius: 999px;
+            background: var(--accent-cyan);
+            box-shadow: 0 0 8px rgba(56,189,248,0.8);
+        }
+
+        .card-note {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 0.75rem;
+        }
+
+        /* GRID PRINCIPAL + LATERAL */
+
+        .grid-main-side {
+            display: grid;
+            grid-template-columns: minmax(0,1fr);
+            gap: 2rem;
+        }
+
+        @media (min-width: 900px) {
+            .grid-main-side {
+                grid-template-columns: minmax(0,1.25fr) minmax(0,0.95fr);
+                gap: 2.5rem;
+            }
+        }
+
+        /* BADGES */
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.28rem 0.8rem;
+            border-radius: 999px;
+            font-size: 0.72rem;
+            letter-spacing: 0.17em;
+            text-transform: uppercase;
+        }
+
+        .badge-emerald {
+            background: rgba(22,163,74,0.12);
+            color: rgba(110,231,183,0.95);
+            border: 1px solid rgba(52,211,153,0.55);
+        }
+
+        .badge-violet {
+            background: rgba(88,28,135,0.4);
+            color: rgba(221,214,254,0.95);
+            border: 1px solid rgba(167,139,250,0.65);
+        }
+
+        .badge-dot {
+            height: 0.42rem;
+            width: 0.42rem;
+            border-radius: 999px;
+            background: currentColor;
+        }
+
+        /* LISTAS TECNOLOGÍA / CASOS */
+
+        .stack-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .stack-list li {
+            font-size: 0.95rem;
+            color: var(--text-main);
+            margin-bottom: 0.55rem;
+        }
+
+        .stack-label {
+            font-weight: 600;
+            color: #f9fafb;
+        }
+
+        .usecases {
+            display: grid;
+            grid-template-columns: minmax(0,1fr);
+            gap: 1.4rem;
+        }
+
+        @media (min-width: 840px) {
+            .usecases {
+                grid-template-columns: minmax(0,1.1fr) minmax(0,1.1fr);
+            }
+        }
+
+        .usecases-text {
+            font-size: 0.95rem;
+            color: var(--text-soft);
+            line-height: 1.7;
+        }
+
+        .usecases-list {
+            list-style: disc;
+            padding-left: 1.2rem;
+            margin: 0;
+        }
+
+        .usecases-list li {
+            font-size: 0.95rem;
+            color: var(--text-main);
+            margin-bottom: 0.45rem;
+        }
+
+        /* SCROLL REVEAL */
+
+        .reveal {
+            opacity: 0;
+            transform: translateY(18px);
+            transition: opacity 0.55s ease-out, transform 0.55s ease-out;
+        }
+
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+
+<body>
+<div class="quantum-background">
+    <canvas id="quantumCanvas"></canvas>
+</div>
+<div class="quantum-overlay"></div>
+
+<div class="page">
+
+    <!-- HEADER -->
+    <header class="header">
+        <div class="wrapper">
+            <div class="header-inner">
+                <div class="brand">
+                    <div class="brand-logo">
+                        <span>Ω</span>
+                    </div>
+                    <div class="brand-text">
+                        <span class="brand-title">Acceso cuántico</span>
+                        <span class="brand-subtitle">Autenticación multiversal — Nivel Omega</span>
+                    </div>
+                </div>
+
+                <div class="header-actions">
+                    <div class="header-pill">
+                        <span class="header-pill-dot"></span>
+                        <span>Núcleo holográfico activo</span>
+                    </div>
+                    <!-- ÚNICO botón global -->
+                    <a href="{% url 'usuarios:login' %}" class="btn-small-outline">
+                        Entrar al portal de acceso
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN -->
+    <main>
+        <div class="wrapper">
+
+            <!-- HERO -->
+            <section class="hero">
+                <div class="hero-grid">
+                    <div>
+                        <p class="hero-tagline">Sistema de control de acceso — Versión futurista</p>
+                        <h1 class="hero-title">
+                            Información del sistema <span class="accent">Acceso Cuántico</span>
+                        </h1>
+                        <p class="hero-lead">
+                            Esta página presenta el propósito, funcionamiento y experiencia del sistema de control de accesos
+                            “Acceso Cuántico”, junto con la forma de explorarlo mediante un usuario visitante específicamente
+                            creado para demostración.
+                        </p>
+
+                        <div class="hero-actions">
+                            <p class="hero-cta-note">
+                                El flujo estándar es: iniciar sesión en el portal de acceso, regresar a esta página informativa
+                                y, desde aquí, continuar hacia el panel de control.
+                            </p>
+
+                            <div class="hero-meta-row">
+                                <div class="hero-meta-block">
+                                    <p class="hero-meta-label">Orientado a</p>
+                                    <p class="hero-meta-value">Centros educativos y organizaciones internas.</p>
+                                </div>
+                                <div class="hero-meta-block">
+                                    <p class="hero-meta-label">Enfoque</p>
+                                    <p class="hero-meta-value">Claridad operativa · Trazabilidad · Experiencia visual coherente.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <aside class="hero-card reveal">
+                        <p class="hero-card-label">Visión general</p>
+                        <h2 class="hero-card-title">Un sistema diseñado para no improvisar</h2>
+                        <p class="hero-card-text">
+                            <strong>Acceso Cuántico</strong> está pensado para contextos donde la seguridad, la trazabilidad y la
+                            claridad de la información no son opcionales: centros educativos, organizaciones y ecosistemas híbridos
+                            físico–digitales.
+                        </p>
+                        <p class="hero-card-text" style="margin-top: 0.8rem;">
+                            Cada intento de acceso genera un <span style="color: var(--accent-cyan);">Evento de Acceso</span>:
+                            quién entra, cuándo, con qué resultado y bajo qué rol. Estos eventos alimentan un panel donde la actividad
+                            deja de ser una lista plana y se convierte en una lectura clara de lo que está ocurriendo.
+                        </p>
+                    </aside>
+                </div>
+            </section>
+
+            <!-- CÓMO FUNCIONA -->
+            <section class="section">
+                <div class="section-header">
+                    <h2 class="section-title">Cómo funciona el ecosistema de acceso</h2>
+                    <p class="section-subtitle">
+                        La base del sistema es simple y sólida: cada interacción se convierte en un evento trazable,
+                        y cada evento alimenta una vista pensada para ser entendida por personas, no solo por sistemas.
+                    </p>
+                </div>
+
+                <div class="grid-two">
+                    <div class="card-soft reveal">
+                        <h3 class="card-soft-title">
+                            Del intento de acceso al panel de control
+                        </h3>
+                        <p class="card-soft-text">
+                            Cada vez que un usuario interactúa con el sistema de acceso se genera un <strong>Evento de Acceso</strong>.
+                        </p>
+                        <ul class="card-list">
+                            <li>Quién ha intentado acceder (usuario y rol).</li>
+                            <li>En qué momento se ha producido el intento.</li>
+                            <li>Cuál ha sido el resultado: permitido, denegado o fuera de horario.</li>
+                            <li>Qué contexto operativo rodea ese acceso (por ejemplo, ventana horaria definida).</li>
+                        </ul>
+                        <p class="card-note">
+                            Todos estos eventos se proyectan en un panel visual donde es posible filtrar, ordenar y comprender
+                            qué está ocurriendo en tiempo casi real.
+                        </p>
+                    </div>
+
+                    <div class="card-soft reveal">
+                        <h3 class="card-soft-title">
+                            Lectura clara para cada perfil
+                        </h3>
+                        <p class="card-soft-text">
+                            El sistema diferencia entre la visión individual y la visión global:
+                        </p>
+                        <ul class="card-list">
+                            <li>Cada usuario autenticado ve sólo <strong>sus propios eventos</strong>, con total privacidad.</li>
+                            <li>Los perfiles de coordinación o administración disponen de <strong>vistas agregadas</strong> por rol, estado y franja horaria.</li>
+                            <li>Los eventos que requieren atención especial se destacan visualmente para ser detectados con rapidez.</li>
+                        </ul>
+                        <p class="card-note">
+                            El resultado es un entorno donde es posible actuar con criterio, sin perderse en datos en bruto.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- VISITANTE + TECNOLOGÍA / CASOS -->
+            <section class="section">
+                <div class="grid-main-side">
+
+                    <!-- VISITANTE -->
+                    <div class="card-soft reveal">
+                        <div style="margin-bottom: 0.8rem;">
+                            <span class="badge badge-emerald">
+                                <span class="badge-dot"></span>
+                                Acceso visitante
+                            </span>
+                        </div>
+                        <h2 class="card-soft-title" style="font-size: 1.15rem;">
+                            Explora el sistema con un usuario de demostración
+                        </h2>
+                        <p class="card-soft-text">
+                            Para entender el flujo de acceso y la experiencia visual sin necesidad de alta previa, el sistema
+                            incorpora un <strong>usuario visitante</strong>. Este usuario permite recorrer el camino de login,
+                            llegar a esta página informativa y, desde aquí, pasar al panel de control.
+                        </p>
+
+                        <div style="margin-top: 0.6rem;">
+                            <p style="font-size: 0.8rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.45rem;">
+                                Credenciales de demostración
+                            </p>
+                            <div style="
+                                background: rgba(15,23,42,0.96);
+                                border-radius: var(--radius-lg);
+                                border: 1px solid rgba(55,65,81,0.9);
+                                padding: 1rem 1.15rem;
+                                display: grid;
+                                gap: 0.65rem;
+                            ">
+                                <div>
+                                    <p style="font-size: 0.72rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.15rem;">
+                                        Identificador oficial
+                                    </p>
+                                    <p style="
+                                        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+                                        font-size: 0.96rem;
+                                        color: var(--accent-cyan);
+                                    ">
+                                        visitante
+                                    </p>
+                                </div>
+                                <div>
+                                    <p style="font-size: 0.72rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.15rem;">
+                                        Clave de acceso
+                                    </p>
+                                    <p style="
+                                        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+                                        font-size: 0.96rem;
+                                        color: var(--accent-cyan);
+                                    ">
+                                        AccesoOmega_2025
+                                    </p>
+                                </div>
+                                <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.3rem;">
+                                    El usuario visitante está orientado a la exploración guiada del sistema y no está diseñado
+                                    para operar sobre datos sensibles en un entorno de producción.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 1.1rem;">
+                            <p style="font-size: 0.86rem; color: var(--text-main); font-weight: 500; margin-bottom: 0.45rem;">
+                                Flujo recomendado de exploración:
+                            </p>
+                            <ol style="margin: 0; padding-left: 1.1rem; font-size: 0.9rem; color: var(--text-soft); display: grid; gap: 0.35rem;">
+                                <li>Acceder al portal de login.</li>
+                                <li>Iniciar sesión con el usuario visitante.</li>
+                                <li>Ser redirigido automáticamente a esta página informativa.</li>
+                                <li>Desde aquí, continuar al panel de control.</li>
+                            </ol>
+                        </div>
+                    </div>
+
+                    <!-- TECNOLOGÍA + CASOS -->
+                    <div class="reveal" style="display: flex; flex-direction: column; gap: 1.6rem;">
+
+                        <div class="card-soft">
+                            <div style="margin-bottom: 0.7rem;">
+                                <span class="badge badge-violet">
+                                    <span class="badge-dot"></span>
+                                    Núcleo tecnológico
+                                </span>
+                            </div>
+                            <h2 class="card-soft-title">
+                                Tecnología que hace posible el sistema
+                            </h2>
+                            <ul class="stack-list">
+                                <li>
+                                    <span class="stack-label">Backend:</span>
+                                    Django 5, Python, ORM, modelo de usuario personalizado, sesiones, validación de contraseñas y protección CSRF.
+                                </li>
+                                <li>
+                                    <span class="stack-label">Frontend:</span>
+                                    HTML5, TailwindCSS, plantillas y fragmentos dinámicos con HTMX.
+                                </li>
+                                <li>
+                                    <span class="stack-label">Infraestructura:</span>
+                                    Render, WhiteNoise y entorno virtual Python, preparados para despliegues en producción.
+                                </li>
+                                <li>
+                                    <span class="stack-label">Control de versiones:</span>
+                                    Git y GitHub, con un historial claro de la evolución del proyecto.
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div class="card-soft">
+                            <h2 class="card-soft-title">
+                                Casos de uso y perfiles clave
+                            </h2>
+                            <div class="usecases">
+                                <div class="usecases-text">
+                                    Acceso Cuántico está pensado para equipos que necesitan una lectura rápida y fiable
+                                    de lo que ocurre en el sistema de accesos, sin depender de informes manuales ni de datos dispersos.
+                                </div>
+                                <div>
+                                    <ul class="usecases-list">
+                                        <li><strong>Dirección de centro</strong> que requiere trazabilidad de accesos.</li>
+                                        <li><strong>Responsables de seguridad</strong> que monitorizan actividad y alertas.</li>
+                                        <li><strong>Coordinación TIC</strong> que conecta usuarios, horarios y servicios.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.7rem;">
+                                Esta landing actúa como resumen funcional y visual del sistema. Mantiene una estética alineada
+                                con el login y el panel para que toda la experiencia se perciba como un único producto coherente.
+                            </p>
+                        </div>
+
+                    </div>
+
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- Línea divisoria -->
+<div style="
+    width: 100%;
+    border-top: 1px solid rgba(75,85,99,0.8);
+    margin-top: 3rem;
+"></div>
+
+<!-- Footer -->
+<footer style="
+    text-align: center;
+    font-size: 12px;
+    color: rgb(156,163,175);
+    font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Share Tech Mono', 'Helvetica Neue', Arial, 'Noto Sans';
+    display: block;
+    width: 100%;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+    background-color: rgba(15,23,42,0.92);
+">
+    <p style="
+        color: rgb(156,163,175);
+        margin: 12px 0;
+        display: block;
+    ">
+        🔒 Sistema de Control de Acceso — Versión Futurista
+    </p>
+
+    <p style="
+        color: rgb(156,163,175);
+        margin: 12px 0;
+        display: block;
+    ">
+        Desarrollado por 
+        <span style="color:#22d3ee">Barberá Digital Studio</span>
+        · {{ now|date:'d M Y' }}
+    </p>
+
+    <p style="
+        color: rgb(107,114,128);
+        margin: 12px 0;
+        display: block;
+        font-size: 11px;
+    ">
+        Todos los accesos quedan registrados en la red cuántica
+    </p>
+</footer>
+</div>
+
+<script>
+    // Fondo cuántico: red dinámica + nodos orbitando
+    (function() {
+        const canvas = document.getElementById('quantumCanvas');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+
+        let width = window.innerWidth;
+        let height = window.innerHeight;
+        let devicePixelRatio = window.devicePixelRatio || 1;
+
+        let gridSpacing = 90;
+        let nodes = [];
+        let orbs = [];
+        let mouse = { x: width / 2, y: height / 2, active: false };
+
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            devicePixelRatio = window.devicePixelRatio || 1;
+
+            canvas.width = width * devicePixelRatio;
+            canvas.height = height * devicePixelRatio;
+            canvas.style.width = width + 'px';
+            canvas.style.height = height + 'px';
+            ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+
+            createGrid();
+            createOrbs();
+        }
+
+        function createGrid() {
+            nodes = [];
+            const cols = Math.ceil(width / gridSpacing) + 2;
+            const rows = Math.ceil(height / gridSpacing) + 2;
+
+            for (let i = -1; i < cols; i++) {
+                for (let j = -1; j < rows; j++) {
+                    const x = i * gridSpacing;
+                    const y = j * gridSpacing;
+                    nodes.push({
+                        x, y,
+                        baseX: x,
+                        baseY: y,
+                        offsetPhase: Math.random() * Math.PI * 2,
+                        noise: Math.random() * 0.6 + 0.4
+                    });
+                }
+            }
+        }
+
+        function createOrbs() {
+            orbs = [];
+            const orbCount = Math.min(14, Math.max(8, Math.floor(width / 160)));
+
+            for (let i = 0; i < orbCount; i++) {
+                const radius = Math.random() * 2.2 + 1.2;
+                const orbitRadius = Math.random() * (Math.min(width, height) / 3) + (Math.min(width, height) / 6);
+                const angle = Math.random() * Math.PI * 2;
+                const speed = (Math.random() * 0.0006 + 0.0003) * (Math.random() > 0.5 ? 1 : -1);
+                const hueOffset = Math.random() * 60;
+
+                orbs.push({
+                    radius,
+                    orbitRadius,
+                    baseAngle: angle,
+                    angle,
+                    speed,
+                    hueOffset
+                });
+            }
+        }
+
+        let lastTime = 0;
+
+        function draw(timestamp) {
+            const delta = timestamp - lastTime;
+            lastTime = timestamp;
+            const t = timestamp * 0.001;
+
+            ctx.clearRect(0, 0, width, height);
+
+            // Fondo degradado sutil
+            const gradient = ctx.createRadialGradient(
+                width * 0.15, height * 0.1, 0,
+                width * 0.15, height * 0.1, width * 0.9
+            );
+            gradient.addColorStop(0, 'rgba(15,23,42,0.4)');
+            gradient.addColorStop(1, 'rgba(15,23,42,1)');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, width, height);
+
+            // Dibujar grid dinámico
+            ctx.lineWidth = 0.7;
+            ctx.strokeStyle = 'rgba(30,64,175,0.55)';
+            ctx.beginPath();
+
+            const waveIntensity = 10;
+            const waveSpeed = 0.7;
+
+            for (let i = 0; i < nodes.length; i++) {
+                const n = nodes[i];
+                const dx = n.baseX - width / 2;
+                const dy = n.baseY - height / 2;
+                const distCenter = Math.sqrt(dx * dx + dy * dy);
+
+                const wave = Math.sin(distCenter * 0.015 - t * waveSpeed + n.offsetPhase) * waveIntensity * n.noise;
+
+                const mx = mouse.active ? mouse.x : width / 2;
+                const my = mouse.active ? mouse.y : height / 2;
+                const dxMouse = n.baseX - mx;
+                const dyMouse = n.baseY - my;
+                const distMouse = Math.sqrt(dxMouse * dxMouse + dyMouse * dyMouse) + 0.001;
+
+                const mouseEffectRadius = 220;
+                let repulse = 0;
+                if (distMouse < mouseEffectRadius) {
+                    const factor = 1 - distMouse / mouseEffectRadius;
+                    repulse = factor * 14;
+                }
+
+                const angleMouse = Math.atan2(dyMouse, dxMouse);
+                const offsetX = Math.cos(angleMouse) * repulse;
+                const offsetY = Math.sin(angleMouse) * repulse;
+
+                n.x = n.baseX + offsetX + (dx / distCenter) * wave || n.baseX;
+                n.y = n.baseY + offsetY + (dy / distCenter) * wave || n.baseY;
+            }
+
+            // Líneas horizontales
+            const rows = {};
+            for (const n of nodes) {
+                const key = Math.round(n.baseY / gridSpacing);
+                if (!rows[key]) rows[key] = [];
+                rows[key].push(n);
+            }
+            for (const key in rows) {
+                const row = rows[key].sort((a, b) => a.baseX - b.baseX);
+                ctx.moveTo(row[0].x, row[0].y);
+                for (let i = 1; i < row.length; i++) {
+                    ctx.lineTo(row[i].x, row[i].y);
+                }
+            }
+
+            // Líneas verticales
+            const cols = {};
+            for (const n of nodes) {
+                const key = Math.round(n.baseX / gridSpacing);
+                if (!cols[key]) cols[key] = [];
+                cols[key].push(n);
+            }
+            for (const key in cols) {
+                const col = cols[key].sort((a, b) => a.baseY - b.baseY);
+                ctx.moveTo(col[0].x, col[0].y);
+                for (let i = 1; i < col.length; i++) {
+                    ctx.lineTo(col[i].x, col[i].y);
+                }
+            }
+
+            ctx.stroke();
+
+            // Nodos leves
+            ctx.fillStyle = 'rgba(148,163,184,0.7)';
+            for (const n of nodes) {
+                ctx.beginPath();
+                ctx.arc(n.x, n.y, 1, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // Orbes cuánticos
+            for (const orb of orbs) {
+                orb.angle += orb.speed * delta;
+                const x = width / 2 + Math.cos(orb.angle) * orb.orbitRadius;
+                const y = height / 2 + Math.sin(orb.angle) * orb.orbitRadius;
+
+                const gradientOrb = ctx.createRadialGradient(x, y, 0, x, y, orb.radius * 10);
+                const hueBase = 190 + orb.hueOffset;
+                gradientOrb.addColorStop(0, `hsla(${hueBase}, 90%, 70%, 0.9)`);
+                gradientOrb.addColorStop(0.35, `hsla(${hueBase}, 90%, 60%, 0.45)`);
+                gradientOrb.addColorStop(1, 'rgba(15,23,42,0)');
+
+                ctx.fillStyle = gradientOrb;
+                ctx.beginPath();
+                ctx.arc(x, y, orb.radius * 10, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.fillStyle = 'rgba(248,250,252,0.95)';
+                ctx.arc(x, y, orb.radius, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            requestAnimationFrame(draw);
+        }
+
+        window.addEventListener('resize', resize);
+        window.addEventListener('mousemove', (e) => {
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+            mouse.active = true;
+        });
+        window.addEventListener('mouseleave', () => {
+            mouse.active = false;
+        });
+
+        resize();
+        requestAnimationFrame(draw);
+    })();
+
+    // Revelado suave de secciones al hacer scroll
+    (function() {
+        const elements = Array.from(document.querySelectorAll('.reveal'));
+        if (!('IntersectionObserver' in window) || elements.length === 0) {
+            elements.forEach(el => el.classList.add('visible'));
+            return;
+        }
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, {
+            threshold: 0.2
+        });
+
+        elements.forEach(el => observer.observe(el));
+    })();
+</script>
+
+</body>
+</html>
