@@ -1,12 +1,14 @@
 <!-- apps/accesos/templates/accesos/info_acceso_cuantico.html -->
 
 {% load static %}
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <title>Acceso Cuántico — Información del sistema</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/png" href="{% static 'img/favicon_qr.png' %}">
 
     <!-- TailwindCSS (para footer y utilidades ligeras) -->
     <link rel="stylesheet" href="{% static 'css/tailwind.css' %}">
@@ -106,33 +108,45 @@
             }
         }
 
-        /* HEADER */
+        /* HEADER PROFESIONAL Y RESPONSIVE */
 
         .header {
             position: sticky;
             top: 0;
             z-index: 20;
             backdrop-filter: blur(18px);
-            background: linear-gradient(to bottom, rgba(15,23,42,0.96), rgba(15,23,42,0.92));
+            background: radial-gradient(circle at 0 0, rgba(56,189,248,0.18) 0, transparent 52%),
+                        radial-gradient(circle at 100% 0, rgba(168,85,247,0.18) 0, transparent 52%),
+                        rgba(15,23,42,0.96);
             border-bottom: 1px solid rgba(15,23,42,0.95);
         }
 
         .header-inner {
+            display: grid;
+            grid-template-columns: minmax(0,1fr);
+            row-gap: 0.7rem;
+            padding: 0.7rem 0.25rem 0.75rem;
+        }
+
+        .header-top-row {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 1rem 0;
+            gap: 0.75rem;
+            min-width: 0;
         }
 
         .brand {
             display: flex;
             align-items: center;
-            gap: 0.85rem;
+            gap: 0.7rem;
+            min-width: 0;
         }
 
         .brand-logo {
-            height: 2.5rem;
-            width: 2.5rem;
+            height: 2.2rem;
+            width: 2.2rem;
+            flex-shrink: 0;
             border-radius: 999px;
             background:
                 radial-gradient(circle at 30% 0%, #22d3ee 0%, #22d3ee 13%, transparent 60%),
@@ -150,74 +164,205 @@
         .brand-logo span {
             color: #020617;
             font-weight: 800;
-            font-size: 1.35rem;
+            font-size: 1.2rem;
         }
 
         .brand-text {
             display: flex;
             flex-direction: column;
-            gap: 0.18rem;
+            justify-content: center;
+            gap: 0.15rem;
+            min-width: 0;
         }
 
         .brand-title {
-            font-size: 0.8rem;
-            letter-spacing: 0.22em;
+            font-size: 0.78rem;
+            letter-spacing: 0.26em;
             text-transform: uppercase;
-            color: rgba(94,234,212,0.92);
+            color: rgba(94,234,212,0.98);
+            white-space: nowrap;
         }
 
         .brand-subtitle {
-            font-size: 0.78rem;
-            color: var(--text-soft);
+            font-size: 0.72rem;
+            color: rgba(148,163,184,0.95);
+            text-transform: none;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            max-width: 100%;
         }
 
         .header-actions {
             display: flex;
             align-items: center;
-            gap: 0.85rem;
+            justify-content: flex-end;
+            gap: 0.6rem;
+            flex-shrink: 0;
         }
 
         .header-pill {
             display: none;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.4rem;
             border-radius: 999px;
-            padding: 0.35rem 0.9rem;
-            border: 1px solid rgba(55,65,81,0.85);
-            font-size: 0.72rem;
+            padding: 0.25rem 0.7rem;
+            border: 1px solid rgba(55,65,81,0.9);
+            font-size: 0.7rem;
             color: var(--text-soft);
+            white-space: nowrap;
+            background: radial-gradient(circle at 0 0, rgba(34,197,94,0.18), transparent 55%);
         }
 
         .header-pill-dot {
-            height: 0.45rem;
-            width: 0.45rem;
+            height: 0.4rem;
+            width: 0.4rem;
             border-radius: 999px;
             background: var(--accent-emerald);
-            box-shadow: 0 0 12px rgba(16,185,129,0.9);
+            box-shadow: 0 0 10px rgba(16,185,129,0.9);
         }
 
         .btn-small-outline {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            padding: 0.45rem 1.3rem;
+            padding: 0.42rem 1.25rem;
             border-radius: 999px;
-            border: 1px solid rgba(148,163,184,0.8);
-            font-size: 0.8rem;
+            border: 1px solid rgba(148,163,184,0.85);
+            font-size: 0.78rem;
             font-weight: 500;
             color: var(--text-main);
-            background: transparent;
+            background: radial-gradient(circle at 0 0, rgba(56,189,248,0.18), transparent 55%),
+                        rgba(15,23,42,0.82);
             text-decoration: none;
-            transition: background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+            white-space: nowrap;
+            transition:
+                background-color 0.18s ease,
+                color 0.18s ease,
+                border-color 0.18s ease,
+                box-shadow 0.18s ease,
+                transform 0.18s ease;
         }
 
         .btn-small-outline:hover {
-            background: rgba(15,23,42,0.95);
-            border-color: rgba(249,250,251,0.95);
+            background: linear-gradient(135deg, #22d3ee, #3b82f6);
+            border-color: rgba(248,250,252,0.98);
+            color: #020617;
             box-shadow:
                 0 12px 28px rgba(15,23,42,0.9),
-                0 0 18px rgba(56,189,248,0.65);
+                0 0 18px rgba(56,189,248,0.75);
             transform: translateY(-1px);
+        }
+
+        /* Segunda fila en móviles: versión compacta del subtítulo / contexto */
+        .header-bottom-row {
+    display: flex;
+    align-items: center;
+    justify-content: center; 
+    width: 100%;
+    text-align: center;
+    padding-top: 0.15rem;
+}
+
+        .header-context {
+            font-size: 0.68rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.18em;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .header-status-dot {
+            height: 0.4rem;
+            width: 0.4rem;
+            border-radius: 999px;
+            background: rgba(52,211,153,0.9);
+            box-shadow: 0 0 12px rgba(22,163,74,0.9);
+            margin-right: 0.4rem;
+        }
+
+        .header-bottom-right {
+            font-size: 0.68rem;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        /* MÓVILES PEQUEÑOS */
+        @media (max-width: 480px) {
+            .header-inner {
+                grid-template-columns: minmax(0,1fr);
+                padding: 0.6rem 0 0.7rem;
+                row-gap: 0.55rem;
+            }
+
+            .brand-logo {
+                height: 2rem;
+                width: 2rem;
+            }
+
+            .brand-logo span {
+                font-size: 1.05rem;
+            }
+
+            .brand-title {
+                font-size: 0.7rem;
+                letter-spacing: 0.23em;
+            }
+
+            .brand-subtitle {
+                font-size: 0.68rem;
+            }
+
+            .header-actions {
+                gap: 0.4rem;
+            }
+
+            .btn-small-outline {
+                font-size: 0.75rem;
+                padding: 0.4rem 1.05rem;
+            }
+
+            .header-context {
+                font-size: 0.64rem;
+                letter-spacing: 0.16em;
+            }
+
+            .header-bottom-right {
+                font-size: 0.64rem;
+            }
+        }
+
+        /* TABLET Y SUPERIOR */
+        @media (min-width: 640px) {
+            .header-inner {
+                grid-template-columns: minmax(0,1fr) auto;
+                align-items: center;
+                row-gap: 0;
+                padding: 0.9rem 0 0.9rem;
+            }
+
+            .header-bottom-row {
+                display: none;
+            }
+
+            .brand-logo {
+                height: 2.5rem;
+                width: 2.5rem;
+            }
+
+            .brand-logo span {
+                font-size: 1.35rem;
+            }
+
+            .brand-title {
+                font-size: 0.8rem;
+            }
+
+            .brand-subtitle {
+                font-size: 0.78rem;
+            }
         }
 
         @media (min-width: 768px) {
@@ -229,7 +374,7 @@
         /* HERO */
 
         .hero {
-            padding: 3.75rem 0 3rem;
+            padding: 3.5rem 0 3rem;
         }
 
         .hero-grid {
@@ -576,25 +721,37 @@
     <header class="header">
         <div class="wrapper">
             <div class="header-inner">
-                <div class="brand">
-                    <div class="brand-logo">
-                        <span>Ω</span>
+
+                <!-- Fila superior -->
+                <div class="header-top-row">
+                    <div class="brand">
+                        <div class="brand-logo">
+                            <span>Ω</span>
+                        </div>
+                        <div class="brand-text">
+                            <span class="brand-title">ACCESO CUÁNTICO</span>
+                            <span class="brand-subtitle">Autenticación multiversal — Nivel Omega</span>
+                        </div>
                     </div>
-                    <div class="brand-text">
-                        <span class="brand-title">Acceso cuántico</span>
-                        <span class="brand-subtitle">Autenticación multiversal — Nivel Omega</span>
+
+                    <div class="header-actions">
+                        <div class="header-pill">
+                            <span class="header-pill-dot"></span>
+                            <span>Núcleo holográfico activo</span>
+                        </div>
+                        <!-- Este botón SIEMPRE lleva al login -->
+                        <a href="{% url 'usuarios:login' %}" class="btn-small-outline">
+                            Entrar al portal de acceso
+                        </a>
                     </div>
                 </div>
 
-                <div class="header-actions">
-                    <div class="header-pill">
-                        <span class="header-pill-dot"></span>
-                        <span>Núcleo holográfico activo</span>
+                <!-- Fila inferior (solo móviles) -->
+                <div class="header-bottom-row">
+                    <div class="header-context">
+                        <span class="header-status-dot"></span>
+                        Sistema de control de acceso · Versión futurista
                     </div>
-                    <!-- ÚNICO botón global -->
-                    <a href="{% if user.is_authenticated %}/accesos/dashboard/{% else %}{% url 'usuarios:login' %}{% endif %}" class="btn-small-outline">
-                        Entrar al portal de acceso
-                    </a>
                 </div>
             </div>
         </div>
@@ -671,6 +828,7 @@
                         </h3>
                         <p class="card-soft-text">
                             Cada vez que un usuario interactúa con el sistema de acceso se genera un <strong>Evento de Acceso</strong>.
+                            Ese evento incluye:
                         </p>
                         <ul class="card-list">
                             <li>Quién ha intentado acceder (usuario y rol).</li>
@@ -844,52 +1002,52 @@
         </div>
     </main>
 
-    <!-- Línea divisoria -->
-<div style="
-    width: 100%;
-    border-top: 1px solid rgba(75,85,99,0.8);
-    margin-top: 3rem;
-"></div>
+    <!-- Línea divisoria + footer -->
+    <div style="
+        width: 100%;
+        border-top: 1px solid rgba(75,85,99,0.8);
+        margin-top: 4rem;
+        margin-bottom: 1.5rem;
+    "></div>
 
-<!-- Footer -->
-<footer style="
-    text-align: center;
-    font-size: 12px;
-    color: rgb(156,163,175);
-    font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Share Tech Mono', 'Helvetica Neue', Arial, 'Noto Sans';
-    display: block;
-    width: 100%;
-    padding-top: 1rem;
-    padding-bottom: 1rem;
-    background-color: rgba(15,23,42,0.92);
-">
-    <p style="
+    <footer style="
+        text-align: center;
+        font-size: 12px;
         color: rgb(156,163,175);
-        margin: 12px 0;
+        font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Share Tech Mono', 'Helvetica Neue', Arial, 'Noto Sans';
         display: block;
+        width: 100%;
+        padding-top: 1rem;
+        padding-bottom: 1rem;
+        background-color: rgba(15,23,42,0.92);
     ">
-        🔒 Sistema de Control de Acceso — Versión Futurista
-    </p>
+        <p style="
+            color: rgb(156,163,175);
+            margin: 12px 0;
+            display: block;
+        ">
+            🔒 Sistema de Control de Acceso — Versión Futurista
+        </p>
 
-    <p style="
-        color: rgb(156,163,175);
-        margin: 12px 0;
-        display: block;
-    ">
-        Desarrollado por 
-        <span style="color:#22d3ee">Barberá Digital Studio</span>
-        · {{ now|date:'d M Y' }}
-    </p>
+        <p style="
+            color: rgb(156,163,175);
+            margin: 12px 0;
+            display: block;
+        ">
+            Desarrollado por 
+            <span style="color:#22d3ee">Barberá Digital Studio</span>
+            · {{ now|date:'d M Y' }}
+        </p>
 
-    <p style="
-        color: rgb(107,114,128);
-        margin: 12px 0;
-        display: block;
-        font-size: 11px;
-    ">
-        Todos los accesos quedan registrados en la red cuántica
-    </p>
-</footer>
+        <p style="
+            color: rgb(107,114,128);
+            margin: 12px 0;
+            display: block;
+            font-size: 11px;
+        ">
+            Todos los accesos quedan registrados en la red cuántica
+        </p>
+    </footer>
 </div>
 
 <script>
@@ -996,7 +1154,7 @@
                 const n = nodes[i];
                 const dx = n.baseX - width / 2;
                 const dy = n.baseY - height / 2;
-                const distCenter = Math.sqrt(dx * dx + dy * dy);
+                const distCenter = Math.sqrt(dx * dx + dy * dy) || 1;
 
                 const wave = Math.sin(distCenter * 0.015 - t * waveSpeed + n.offsetPhase) * waveIntensity * n.noise;
 
@@ -1017,8 +1175,8 @@
                 const offsetX = Math.cos(angleMouse) * repulse;
                 const offsetY = Math.sin(angleMouse) * repulse;
 
-                n.x = n.baseX + offsetX + (dx / distCenter) * wave || n.baseX;
-                n.y = n.baseY + offsetY + (dy / distCenter) * wave || n.baseY;
+                n.x = n.baseX + offsetX + (dx / distCenter) * wave;
+                n.y = n.baseY + offsetY + (dy / distCenter) * wave;
             }
 
             // Líneas horizontales
@@ -1030,6 +1188,7 @@
             }
             for (const key in rows) {
                 const row = rows[key].sort((a, b) => a.baseX - b.baseX);
+                if (!row.length) continue;
                 ctx.moveTo(row[0].x, row[0].y);
                 for (let i = 1; i < row.length; i++) {
                     ctx.lineTo(row[i].x, row[i].y);
@@ -1045,6 +1204,7 @@
             }
             for (const key in cols) {
                 const col = cols[key].sort((a, b) => a.baseY - b.baseY);
+                if (!col.length) continue;
                 ctx.moveTo(col[0].x, col[0].y);
                 for (let i = 1; i < col.length; i++) {
                     ctx.lineTo(col[i].x, col[i].y);
