@@ -54,9 +54,9 @@ def actualizar_perfil(request):
 
 def login_view(request):
 
-    # Si ya está autenticado → ir directo al dashboard
+    # Si ya está autenticado → volver a la página informativa
     if request.user.is_authenticated:
-        return redirect('/accesos/dashboard/')
+        return redirect('/accesos/info/')
 
     if request.method == 'POST':
         username = request.POST.get('username')
@@ -74,6 +74,7 @@ def login_view(request):
         return render(request, 'usuarios/partials/login_form.html', {'error': error})
 
     return render(request, 'usuarios/login.html', {'error': error, 'rango': range(20)})
+
 
 
 def dashboard_view(request):

@@ -592,7 +592,7 @@
                         <span>Núcleo holográfico activo</span>
                     </div>
                     <!-- ÚNICO botón global -->
-                    <a href="{% url 'usuarios:login' %}" class="btn-small-outline">
+                    <a href="{% if user.is_authenticated %}/accesos/dashboard/{% else %}{% url 'usuarios:login' %}{% endif %}" class="btn-small-outline">
                         Entrar al portal de acceso
                     </a>
                 </div>
